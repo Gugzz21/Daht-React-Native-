@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
 const SNOOPY_IMAGE = require('../assets/snoopy.png'); 
 const DAHT_LOGO = require('../assets/daht-logo.png');
 
@@ -15,57 +16,70 @@ export default function ConfiguracoesScreen() {
     </TouchableOpacity>
   );
   
-  // Exemplo de como usar router.back() para voltar
   const handleGoBack = () => {
     router.back();
   }
 
   return (
-    <View style={styles.container}>
-      
-      {/* Header com Logo e Botão Voltar */}
-      <View style={styles.header}>
-        <Text style={styles.title}>CONFIGURAÇÕES</Text>
-        <View style={styles.dividerLarge} />
-        <Image 
-          source={DAHT_LOGO} 
-          style={styles.logoSmall} 
-          resizeMode="contain"
-        />
-        
-        {/* Botão Voltar */}
-        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-             <Text style={styles.backButtonText}>{'<'}</Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ImageBackground 
+        source={BACKGROUND_IMAGE} 
+        style={styles.container}
+        resizeMode="cover"
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          
+          {/* Header com Logo e Botão Voltar */}
+          <View style={styles.header}>
+            <Text style={styles.title}>CONFIGURAÇÕES</Text>
+            <View style={styles.dividerLarge} />
+            
+            <Image 
+                source={DAHT_LOGO} 
+                style={styles.logoSmall} 
+                resizeMode="contain"
+            />
+            
+            {/* Botão Voltar */}
+            <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+                 <Text style={styles.backButtonText}>{'<'}</Text>
+            </TouchableOpacity>
+          </View>
 
-      {/* Opções de Configuração */}
-      <View style={styles.optionsList}>
-        {settingsOptions.map(renderOption)}
-      </View>
+          {/* Opções de Configuração */}
+          <View style={styles.optionsList}>
+            {settingsOptions.map(renderOption)}
+          </View>
 
-      {/* Imagem do Snoopy */}
-      <View style={styles.snoopyContainer}>
-        <Image 
-          source={SNOOPY_IMAGE} 
-          style={styles.snoopyImage}
-          resizeMode="cover"
-        />
-      </View>
+          {/* Imagem do Snoopy */}
+          <View style={styles.snoopyContainer}>
+            <Image 
+              source={SNOOPY_IMAGE} 
+              style={styles.snoopyImage}
+              resizeMode="cover"
+            />
+          </View>
 
-      {/* Rodapé */}
-      <Text style={styles.footerText}>Made by Gustavo Diniz</Text>
-    </View>
+          {/* Rodapé */}
+          <Text style={styles.footerText}>Made by Gustavo Diniz</Text>
+        </ScrollView>
+      </ImageBackground>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#FF8C00', 
+  },
+  scrollContent: {
     alignItems: 'center',
     paddingTop: 60,
     paddingHorizontal: 20,
+    flexGrow: 1,
   },
   logoSmall: {
     position: 'absolute',

@@ -1,7 +1,7 @@
 import { Link, useRouter } from 'expo-router';
-import { Dimensions, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, ImageBackground, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-// Caminho corrigido para quem está em app/auth/
+const BACKGROUND_IMAGE = require('../../assets/fundo-site.png');
 const DAHT_LOGO = require('../../assets/daht-logo.png'); 
 const { height } = Dimensions.get('window');
 
@@ -14,7 +14,11 @@ export default function LoginScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ImageBackground 
+        source={BACKGROUND_IMAGE} 
+        style={styles.container}
+        resizeMode="cover" 
+    >
       
       {/* Logo DAHT */}
       <View style={styles.logoContainer}>
@@ -47,14 +51,13 @@ export default function LoginScreen() {
           <Text style={styles.buttonText}>Logar</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FF8C00', 
     alignItems: 'center',
   },
   logoContainer: {

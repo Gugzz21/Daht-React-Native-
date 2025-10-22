@@ -1,11 +1,12 @@
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // Caminhos dos Assets
+const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
 const DAHT_LOGO = require('../assets/daht-logo.png');
 const SETTINGS_ICON = require('../assets/configuracao-icon.png'); 
-const CHARACTER_AVATAR = require('../assets/character-avatar.png'); 
+const CHARACTER_AVATAR = require('../assets/snoopy.png'); 
 const HEART_ICON = require('../assets/heart-icon.png'); 
 const COIN_ICON = require('../assets/coin-icon.png'); 
 const ENERGY_ICON = require('../assets/energy-icon.png'); 
@@ -46,19 +47,17 @@ const MissionItem = React.memo(({ description, completed, onToggle }) => (
         data finalizacao
       </Text>
     </View>
-    {/* Marcador no canto direito (Aba) */}
     <View style={missionStyles.bookmark} />
   </View>
 ));
 
 // --- Tela Principal ---
 export default function TelaPrincipalScreen() {
-  // Aumentei o número de missões para garantir que a barra de rolagem apareça
   const [missions, setMissions] = useState(
     Array.from({ length: 15 }, (_, i) => ({
       id: i + 1,
       description: `descrição da missão ${i + 1}`,
-      completed: i % 3 === 0, // Algumas já completas
+      completed: i % 3 === 0, 
     }))
   );
 
@@ -69,7 +68,6 @@ export default function TelaPrincipalScreen() {
   };
   
   const handleAddMission = () => {
-      // Adicionar nova missão à lista
       const newMission = {
           id: missions.length + 1,
           description: `Nova Missão ${missions.length + 1}`,
@@ -80,83 +78,93 @@ export default function TelaPrincipalScreen() {
   };
 
   const handleDeleteMissions = () => {
-      // Deletar todas as missões completas
       setMissions(missions.filter(m => !m.completed));
       console.log("Deletar Missões");
   };
 
   return (
-    <SafeAreaView style={styles.container}> 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        
-        {/* === HEADER CENTRALIZADO (FIXO) === */}
-        <View style={styles.header}>
+    <SafeAreaView style={styles.safeArea}> 
+      <ImageBackground 
+        source={BACKGROUND_IMAGE} 
+        style={styles.container}
+        resizeMode="cover"
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
           
-          <View style={styles.absoluteIcons}>
-            <Image source={DAHT_LOGO} style={styles.dahtLogo} resizeMode="contain" />
+          {/* === HEADER CENTRALIZADO (ESTILO IMAGEM DE REFERÊNCIA) === */}
+          <View style={styles.header}>
             
-            <Link href="/configuracoes" asChild>
-              <TouchableOpacity style={styles.settingsButton}>
-                 <Image source={SETTINGS_ICON} style={styles.settingsImage} resizeMode="contain" />
+            {/* Ícones Absolutos no Canto Superior Direito */}
+            <View style={styles.absoluteIcons}>
+              <Image source={DAHT_LOGO} style={styles.dahtLogo} resizeMode="contain" />
+              
+              <Link href="/configuracoes" asChild>
+                <TouchableOpacity style={styles.settingsButton}>
+                  <Image source={SETTINGS_ICON} style={styles.settingsImage} resizeMode="contain" />
+                </TouchableOpacity>
+              </Link>
+            </View>
+            
+            {/* Avatar Principal */}
+            <Link href="/config-personagem" asChild>
+              <TouchableOpacity style={styles.avatarLink}>
+                <View style={styles.avatarContainer}>
+                  <Image source={CHARACTER_AVATAR} style={styles.avatarImage} resizeMode="cover" />
+                  <View style={styles.starBadge} /> 
+                </View>
               </TouchableOpacity>
             </Link>
+
+
+            {/* Nome do Personagem */}
+            <Text style={styles.characterName}>PERSONAGEM NOME</Text>
+
+            {/* Barras de Status - Linha 1 */}
+            <View style={styles.statusRow}>
+              <StatusBar value={100} color="#E83A41" iconSource={HEART_ICON} /> 
+              <StatusBar value={1000} color="#FFD700" iconSource={COIN_ICON} /> 
+            </View>
+            
+            {/* Barras de Status - Linha 2 (Centralizada) */}
+            <View style={styles.statusRowBottom}>
+              <StatusBar value={100} color="#38B000" iconSource={ENERGY_ICON} />
+            </View>
+          </View>
+
+          {/* === SEÇÃO DE MISSÕES COM SCROLL === */}
+          <Text style={styles.missionsTitle}>Missões</Text>
+          
+          {/* CONTAINER DA LISTA DE MISSÕES COM SCROLL PRÓPRIO */}
+          <View style={styles.missionsScrollWrapper}>
+              <ScrollView style={styles.missionsScrollView} contentContainerStyle={styles.missionsContainer}>
+                  {missions.map(mission => (
+                    <MissionItem 
+                      key={mission.id} 
+                      description={mission.description} 
+                      completed={mission.completed} 
+                      onToggle={() => toggleMission(mission.id)}
+                    />
+                  ))}
+              </ScrollView>
           </View>
           
-          {/* Avatar Principal */}
-          <Link href="/config-personagem" asChild>
-            <TouchableOpacity style={styles.avatarLink}>
-              <View style={styles.avatarContainer}>
-                <Image source={CHARACTER_AVATAR} style={styles.avatarImage} resizeMode="cover" />
-                <View style={styles.starBadge} /> 
-              </View>
-            </TouchableOpacity>
-          </Link>
+        </ScrollView>
 
-          <Text style={styles.characterName}>PERSONAGEM NOME</Text>
-
-          {/* Barras de Status - Linha 1 e 2 */}
-          <View style={styles.statusRow}>
-            <StatusBar value={100} color="#E83A41" iconSource={HEART_ICON} /> 
-            <StatusBar value={1000} color="#FFD700" iconSource={COIN_ICON} /> 
-          </View>
-          <View style={styles.statusRowBottom}>
-            <StatusBar value={100} color="#38B000" iconSource={ENERGY_ICON} />
-          </View>
+        {/* Botões Flutuantes (Lixeira e Adicionar) - FORA DO SCROLL VIEW PRINCIPAL */}
+        <View style={styles.floatButtons}>
+          <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteMissions}>
+            <Text style={styles.deleteIcon}>🗑️</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.addButton} onPress={handleAddMission}>
+            <Text style={styles.addIcon}>+</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* === SEÇÃO DE MISSÕES COM SCROLL === */}
-        <Text style={styles.missionsTitle}>Missões</Text>
-        
-        {/* CONTAINER DA LISTA DE MISSÕES COM SCROLL PRÓPRIO */}
-        <View style={styles.missionsScrollWrapper}>
-            <ScrollView style={styles.missionsScrollView} contentContainerStyle={styles.missionsContainer}>
-                {missions.map(mission => (
-                  <MissionItem 
-                    key={mission.id} 
-                    description={mission.description} 
-                    completed={mission.completed} 
-                    onToggle={() => toggleMission(mission.id)}
-                  />
-                ))}
-            </ScrollView>
-        </View>
-        
-      </ScrollView>
-
-      {/* Botões Flutuantes (Lixeira e Adicionar) - FORA DO SCROLL VIEW PRINCIPAL */}
-      <View style={styles.floatButtons}>
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteMissions}>
-          <Text style={styles.deleteIcon}>🗑️</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.addButton} onPress={handleAddMission}>
-          <Text style={styles.addIcon}>+</Text>
-        </TouchableOpacity>
-      </View>
+      </ImageBackground>
     </SafeAreaView>
   );
 }
 
-// --- Estilos para as Barras de Status (Não Alterados) ---
+// --- Estilos para as Barras de Status ---
 const statusStyles = StyleSheet.create({
     barContainer: {
         flexDirection: 'row',
@@ -191,10 +199,7 @@ const statusStyles = StyleSheet.create({
     }
 });
 
-// --- Estilos para os Itens de Missão (Não Alterados) ---
-// ... Componentes e lógica (sem alterações)
-
-// --- Estilos para os Itens de Missão (MISSIONSTYLES) ---
+// --- Estilos para os Itens de Missão ---
 const missionStyles = StyleSheet.create({
     itemContainer: {
         flexDirection: 'row',
@@ -226,14 +231,12 @@ const missionStyles = StyleSheet.create({
     },
     textContainer: {
         flex: 1,
-        // Garante que o conteúdo dentro dele seja empilhado verticalmente
         flexDirection: 'column', 
     },
     description: {
         fontSize: 16,
         fontWeight: 'bold',
         color: '#000',
-        // Ocupa o espaço necessário
     },
     completedText: {
         textDecorationLine: 'line-through',
@@ -242,15 +245,13 @@ const missionStyles = StyleSheet.create({
     dateText: {
         fontSize: 12,
         color: 'gray',
-        // REMOVEMOS: position: 'absolute', bottom: 5, right: 35
-        // Agora, ele simplesmente flui logo após o texto da missão
-        alignSelf: 'flex-start', // Garante que a data comece na esquerda do container
-        marginTop: 2, // Pequeno espaço entre a descrição e a data
+        alignSelf: 'flex-start',
+        marginTop: 2, 
     },
     bookmark: {
         width: 15,
         height: 15,
-        backgroundColor: '#FFD700', // Marcador amarelo (Aba)
+        backgroundColor: '#FFD700', 
         borderWidth: 2,
         borderColor: 'black',
         position: 'absolute',
@@ -261,15 +262,15 @@ const missionStyles = StyleSheet.create({
     }
 });
 
-
-// --- Estilos Principais da Tela (Com Novos Estilos de Scroll) ---
+// --- Estilos Principais da Tela ---
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#FF8C00', 
   },
   scrollContent: {
-    // Não precisa de flexGrow: 1 porque a lista de missões terá altura fixa
     alignItems: 'center',
     paddingTop: 0, 
     paddingBottom: 100, 
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
   },
   statusRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     width: '85%', 
     marginBottom: 5,
   },
@@ -371,24 +372,20 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: 'black',
   },
-  // NOVOS ESTILOS PARA O SCROLL
   missionsScrollWrapper: {
     width: '90%',
-    // Altura fixa para permitir que o ScrollView funcione internamente
     height: 380, 
     borderWidth: 5,
     borderColor: '#000',
-    backgroundColor: '#C0C0C0', // Fundo cinza da área de missões
+    backgroundColor: '#C0C0C0', 
     padding: 10,
   },
   missionsScrollView: {
       flex: 1,
   },
   missionsContainer: {
-    // Padding interno para os itens de missão, se necessário
     paddingBottom: 10, 
   },
-  // FIM NOVOS ESTILOS
   floatButtons: {
     position: 'absolute',
     bottom: 30,

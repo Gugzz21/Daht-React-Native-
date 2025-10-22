@@ -1,6 +1,5 @@
 import { Stack } from 'expo-router';
 
-// --- Layout Principal (RootLayout) ---
 export default function RootLayout() {
   return (
     <Stack>
@@ -11,7 +10,7 @@ export default function RootLayout() {
       />
       {/* Agrupamento das telas de autenticação */}
       <Stack.Screen 
-        name="auth/_layout" 
+        name="(auth)/_layout" 
         options={{ headerShown: false }} 
       />
       {/* Tela Home - Tela Principal */}
@@ -30,7 +29,7 @@ export default function RootLayout() {
         options={{ headerShown: false }} 
       />
       
-      {/* NOVO: Tela de Configuração do Personagem */}
+      {/* Tela de Configuração do Personagem */}
       <Stack.Screen 
         name="config-personagem" 
         options={{ headerShown: false, title: 'Config. Personagem' }} 

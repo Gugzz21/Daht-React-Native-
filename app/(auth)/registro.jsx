@@ -1,7 +1,7 @@
 import { Link } from 'expo-router';
-import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-// Caminho corrigido para quem está em app/auth/
+const BACKGROUND_IMAGE = require('../../assets/fundo-site.png');
 const DAHT_LOGO = require('../../assets/daht-logo.png');
 
 // Componente reusável para os campos de entrada
@@ -14,37 +14,41 @@ const FormInput = ({ label }) => (
 
 export default function RegistroScreen() {
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer} style={styles.container}>
-      
-      <View style={styles.logoContainer}>
-        <Image 
-          source={DAHT_LOGO} 
-          style={styles.logo} 
-          resizeMode="contain" 
-        />
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <ImageBackground 
+        source={BACKGROUND_IMAGE} 
+        style={styles.container}
+        resizeMode="cover"
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          
+          <View style={styles.logoContainer}>
+            <Image source={DAHT_LOGO} style={styles.logo} resizeMode="contain" />
+          </View>
 
-      <View style={styles.formContainer}>
-        <FormInput label="Nome" />
-        <FormInput label="Email" />
-        <FormInput label="Senha" />
-        <FormInput label="Endereço" />
-        <FormInput label="Data de Nascimento" />
-        <FormInput label="Confirmar Senha" />
+          <View style={styles.formContainer}>
+            <FormInput label="Nome" />
+            <FormInput label="Email" />
+            <FormInput label="Senha" />
+            <FormInput label="Endereço" />
+            <FormInput label="Data de Nascimento" />
+            <FormInput label="Confirmar Senha" />
 
-        <TouchableOpacity style={styles.registerButton}>
-          <Text style={styles.buttonText}>Registrar</Text>
-        </TouchableOpacity>
-        
-        {/* Link para voltar ao Login */}
-        <Link href="/(auth)/login" asChild>
-          <TouchableOpacity style={styles.backLinkContainer}>
-            <Text style={styles.backLinkText}>Voltar para o Login</Text>
-          </TouchableOpacity>
-        </Link>
-      </View>
+            <TouchableOpacity style={styles.registerButton}>
+              <Text style={styles.buttonText}>Registrar</Text>
+            </TouchableOpacity>
+            
+            {/* Link para voltar ao Login */}
+            <Link href="/(auth)/login" asChild>
+              <TouchableOpacity style={styles.backLinkContainer}>
+                <Text style={styles.backLinkText}>Voltar para o Login</Text>
+              </TouchableOpacity>
+            </Link>
+          </View>
 
-    </ScrollView>
+        </ScrollView>
+      </ImageBackground>
+    </SafeAreaView>
   );
 }
 
@@ -70,9 +74,11 @@ const inputStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#FF8C00', 
   },
   scrollContainer: {
     alignItems: 'center',

@@ -1,60 +1,58 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-// Caminhos dos Assets (Ajuste conforme seus arquivos)
-const DAHT_LOGO = require('../assets/daht-logo.png'); 
-const DEFAULT_AVATAR = require('../assets/default-avatar.png'); // Placeholder do avatar cinza
+const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
+const DAHT_LOGO = require('../assets/daht-logo.png');
+const DEFAULT_AVATAR = require('../assets/default-avatar.png'); 
 
 export default function CriacaoPersonagemScreen() {
   const router = useRouter();
   const [nickname, setNickname] = useState('');
 
   const handleCreate = () => {
-    // Aqui estaria a lógica de validação/criação de personagem
+    // Implementar a lógica de criação
     
-    // Navega para a Home (substituindo a tela atual para não permitir voltar)
+    // AÇÃO CORRIGIDA: Vai para a Home
     router.replace('/home'); 
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
-        
-        {/* Ícone DAHT no canto superior direito */}
-        <Image 
-            source={DAHT_LOGO} 
-            style={styles.dahtLogo} 
-            resizeMode="contain"
-        />
+      <ImageBackground 
+        source={BACKGROUND_IMAGE} 
+        style={styles.container}
+        resizeMode="cover"
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          
+          <Image source={DAHT_LOGO} style={styles.dahtLogo} resizeMode="contain" />
 
-        <Text style={styles.title}>Criação de Personagem</Text>
-        
-        {/* Avatar Placeholder/Upload */}
-        <View style={styles.avatarContainer}>
-          <Image source={DEFAULT_AVATAR} style={styles.avatarImage} resizeMode="contain" />
-        </View>
+          <Text style={styles.title}>Criação de Personagem</Text>
+          
+          <View style={styles.avatarContainer}>
+            <Image source={DEFAULT_AVATAR} style={styles.avatarImage} resizeMode="contain" />
+          </View>
 
-        {/* Formulário */}
-        <View style={styles.formContainer}>
-            <Text style={styles.label}>Nickname:</Text>
-            <TextInput
-              style={styles.input}
-              value={nickname}
-              onChangeText={setNickname}
-              placeholderTextColor="#FFF"
-            />
-            
-            <Text style={styles.label}>Upload imagem:</Text>
-            <View style={styles.uploadPlaceholder} />
-        </View>
+          <View style={styles.formContainer}>
+              <Text style={styles.label}>Nickname:</Text>
+              <TextInput
+                style={styles.input}
+                value={nickname}
+                onChangeText={setNickname}
+                placeholderTextColor="#FFF"
+              />
+              
+              <Text style={styles.label}>Upload imagem:</Text>
+              <View style={styles.uploadPlaceholder} />
+          </View>
 
-        {/* Botão Criar */}
-        <TouchableOpacity style={styles.createButton} onPress={handleCreate}>
-          <Text style={styles.buttonText}>Criar</Text>
-        </TouchableOpacity>
-
-      </ScrollView>
+          <TouchableOpacity style={styles.createButton} onPress={handleCreate}>
+            <Text style={styles.buttonText}>Criar</Text>
+          </TouchableOpacity>
+          
+        </ScrollView>
+      </ImageBackground>
     </SafeAreaView>
   );
 }
@@ -62,9 +60,11 @@ export default function CriacaoPersonagemScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FF8C00', // Laranja vibrante
   },
   container: {
+    flex: 1,
+  },
+  scrollContent: {
     flexGrow: 1,
     alignItems: 'center',
     paddingTop: 50,
