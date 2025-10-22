@@ -1,30 +1,39 @@
 import { Stack } from 'expo-router';
 
+// --- Layout Principal (RootLayout) ---
 export default function RootLayout() {
   return (
     <Stack>
-      {/* Index apenas redireciona e não precisa de cabeçalho */}
+      {/* Rota inicial/Auth layout */}
       <Stack.Screen 
         name="index" 
         options={{ headerShown: false }} 
       />
-      
-      {/* O grupo (auth) é configurado no seu próprio arquivo _layout.jsx */}
-      
-      {/* Telas Principais */}
+      {/* Agrupamento das telas de autenticação */}
+      <Stack.Screen 
+        name="auth/_layout" 
+        options={{ headerShown: false }} 
+      />
+      {/* Tela Home - Tela Principal */}
       <Stack.Screen 
         name="home" 
         options={{ headerShown: false }} 
       />
-      
+      {/* Tela de Criação de Personagem */}
+      <Stack.Screen 
+        name="personagem" 
+        options={{ headerShown: false }} 
+      />
+      {/* Tela de Configurações Gerais */}
       <Stack.Screen 
         name="configuracoes" 
         options={{ headerShown: false }} 
       />
       
+      {/* NOVO: Tela de Configuração do Personagem */}
       <Stack.Screen 
-        name="personagem" 
-        options={{ headerShown: false, title: 'Criação' }} 
+        name="config-personagem" 
+        options={{ headerShown: false, title: 'Config. Personagem' }} 
       />
     </Stack>
   );
