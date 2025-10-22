@@ -1,20 +1,19 @@
 import { Link } from 'expo-router';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // Caminhos dos Assets
 const DAHT_LOGO = require('../assets/daht-logo.png');
 const SETTINGS_ICON = require('../assets/configuracao-icon.png'); 
-const CHARACTER_AVATAR_HOME = require('../assets/character-avatar.png'); // Avatar principal (substitua pelo seu avatar com capuz)
+const CHARACTER_AVATAR = require('../assets/character-avatar.png'); 
 const HEART_ICON = require('../assets/heart-icon.png'); 
-const COIN_ICON = require('../assets/coin-icon.png'); // Placeholder para moeda
-const ENERGY_ICON = require('../assets/energy-icon.png'); // Placeholder para energia
+const COIN_ICON = require('../assets/coin-icon.png'); 
+const ENERGY_ICON = require('../assets/energy-icon.png'); 
 
 // --- Componente Reusável para Barras de Status ---
-const StatusBar = ({ value, color, iconSource }) => (
+const StatusBar = ({ value, color, iconSource }) => ( 
   <View style={statusStyles.barContainer}>
     <View style={[statusStyles.barLabel, { backgroundColor: color }]}>
-      {/* Usa Image Source para o ícone */}
       {iconSource && (
         <Image 
           source={iconSource} 
@@ -29,10 +28,9 @@ const StatusBar = ({ value, color, iconSource }) => (
   </View>
 );
 
-// --- Componente para Item de Missão ---
-const MissionItem = ({ description, completed, onToggle }) => (
+// --- Componente para Item de Missão (com Checkbox) ---
+const MissionItem = React.memo(({ description, completed, onToggle }) => (
   <View style={missionStyles.itemContainer}>
-    {/* Checkbox */}
     <TouchableOpacity 
       style={missionStyles.checkbox} 
       onPress={onToggle}
@@ -51,17 +49,18 @@ const MissionItem = ({ description, completed, onToggle }) => (
     {/* Marcador no canto direito (Aba) */}
     <View style={missionStyles.bookmark} />
   </View>
-);
+));
 
 // --- Tela Principal ---
 export default function TelaPrincipalScreen() {
-  const [missions, setMissions] = useState([
-    { id: 1, description: 'descrição', completed: false },
-    { id: 2, description: 'descrição', completed: false },
-    { id: 3, description: 'descrição', completed: false },
-    { id: 4, description: 'descrição', completed: false },
-    { id: 5, description: 'descrição', completed: false },
-  ]);
+  // Aumentei o número de missões para garantir que a barra de rolagem apareça
+  const [missions, setMissions] = useState(
+    Array.from({ length: 15 }, (_, i) => ({
+      id: i + 1,
+      description: `descrição da missão ${i + 1}`,
+      completed: i % 3 === 0, // Algumas já completas
+    }))
+  );
 
   const toggleMission = (id) => {
     setMissions(missions.map(m => 
@@ -70,10 +69,19 @@ export default function TelaPrincipalScreen() {
   };
   
   const handleAddMission = () => {
+      // Adicionar nova missão à lista
+      const newMission = {
+          id: missions.length + 1,
+          description: `Nova Missão ${missions.length + 1}`,
+          completed: false,
+      };
+      setMissions([...missions, newMission]);
       console.log("Adicionar Missão");
   };
 
   const handleDeleteMissions = () => {
+      // Deletar todas as missões completas
+      setMissions(missions.filter(m => !m.completed));
       console.log("Deletar Missões");
   };
 
@@ -81,15 +89,12 @@ export default function TelaPrincipalScreen() {
     <SafeAreaView style={styles.container}> 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
-        {/* === HEADER CENTRALIZADO (ESTILO IMAGEM DE REFERÊNCIA) === */}
+        {/* === HEADER CENTRALIZADO (FIXO) === */}
         <View style={styles.header}>
           
-          {/* Ícones Absolutos no Canto Superior Direito */}
           <View style={styles.absoluteIcons}>
-            {/* DAHT Logo */}
             <Image source={DAHT_LOGO} style={styles.dahtLogo} resizeMode="contain" />
             
-            {/* Ícone de Engrenagem (Configurações Gerais) */}
             <Link href="/configuracoes" asChild>
               <TouchableOpacity style={styles.settingsButton}>
                  <Image source={SETTINGS_ICON} style={styles.settingsImage} resizeMode="contain" />
@@ -101,46 +106,44 @@ export default function TelaPrincipalScreen() {
           <Link href="/config-personagem" asChild>
             <TouchableOpacity style={styles.avatarLink}>
               <View style={styles.avatarContainer}>
-                <Image source={CHARACTER_AVATAR_HOME} style={styles.avatarImage} resizeMode="cover" />
-                <View style={styles.starBadge} /> {/* Estrela/Badge */}
+                <Image source={CHARACTER_AVATAR} style={styles.avatarImage} resizeMode="cover" />
+                <View style={styles.starBadge} /> 
               </View>
             </TouchableOpacity>
           </Link>
 
-
-          {/* Nome do Personagem */}
           <Text style={styles.characterName}>PERSONAGEM NOME</Text>
 
-          {/* Barras de Status */}
+          {/* Barras de Status - Linha 1 e 2 */}
           <View style={styles.statusRow}>
-            {/* Vida e Moedas */}
             <StatusBar value={100} color="#E83A41" iconSource={HEART_ICON} /> 
             <StatusBar value={1000} color="#FFD700" iconSource={COIN_ICON} /> 
           </View>
           <View style={styles.statusRowBottom}>
-            {/* Energia/XP */}
             <StatusBar value={100} color="#38B000" iconSource={ENERGY_ICON} />
           </View>
         </View>
 
-        {/* === SEÇÃO DE MISSÕES === */}
+        {/* === SEÇÃO DE MISSÕES COM SCROLL === */}
         <Text style={styles.missionsTitle}>Missões</Text>
         
-        {/* Container que segura os itens de missão */}
-        <View style={styles.missionsContainer}>
-            {missions.map(mission => (
-              <MissionItem 
-                key={mission.id} 
-                description={mission.description} 
-                completed={mission.completed} 
-                onToggle={() => toggleMission(mission.id)}
-              />
-            ))}
+        {/* CONTAINER DA LISTA DE MISSÕES COM SCROLL PRÓPRIO */}
+        <View style={styles.missionsScrollWrapper}>
+            <ScrollView style={styles.missionsScrollView} contentContainerStyle={styles.missionsContainer}>
+                {missions.map(mission => (
+                  <MissionItem 
+                    key={mission.id} 
+                    description={mission.description} 
+                    completed={mission.completed} 
+                    onToggle={() => toggleMission(mission.id)}
+                  />
+                ))}
+            </ScrollView>
         </View>
         
       </ScrollView>
 
-      {/* Botões Flutuantes (Lixeira e Adicionar) */}
+      {/* Botões Flutuantes (Lixeira e Adicionar) - FORA DO SCROLL VIEW PRINCIPAL */}
       <View style={styles.floatButtons}>
         <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteMissions}>
           <Text style={styles.deleteIcon}>🗑️</Text>
@@ -153,7 +156,7 @@ export default function TelaPrincipalScreen() {
   );
 }
 
-// --- Estilos para as Barras de Status ---
+// --- Estilos para as Barras de Status (Não Alterados) ---
 const statusStyles = StyleSheet.create({
     barContainer: {
         flexDirection: 'row',
@@ -169,6 +172,8 @@ const statusStyles = StyleSheet.create({
     },
     barLabel: {
         padding: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     iconImage: {
         width: 20, 
@@ -186,7 +191,10 @@ const statusStyles = StyleSheet.create({
     }
 });
 
-// --- Estilos para os Itens de Missão ---
+// --- Estilos para os Itens de Missão (Não Alterados) ---
+// ... Componentes e lógica (sem alterações)
+
+// --- Estilos para os Itens de Missão (MISSIONSTYLES) ---
 const missionStyles = StyleSheet.create({
     itemContainer: {
         flexDirection: 'row',
@@ -218,11 +226,14 @@ const missionStyles = StyleSheet.create({
     },
     textContainer: {
         flex: 1,
+        // Garante que o conteúdo dentro dele seja empilhado verticalmente
+        flexDirection: 'column', 
     },
     description: {
         fontSize: 16,
         fontWeight: 'bold',
         color: '#000',
+        // Ocupa o espaço necessário
     },
     completedText: {
         textDecorationLine: 'line-through',
@@ -231,16 +242,15 @@ const missionStyles = StyleSheet.create({
     dateText: {
         fontSize: 12,
         color: 'gray',
-        alignSelf: 'flex-end',
-        marginTop: 5,
-        position: 'absolute',
-        bottom: 5,
-        right: 35, 
+        // REMOVEMOS: position: 'absolute', bottom: 5, right: 35
+        // Agora, ele simplesmente flui logo após o texto da missão
+        alignSelf: 'flex-start', // Garante que a data comece na esquerda do container
+        marginTop: 2, // Pequeno espaço entre a descrição e a data
     },
     bookmark: {
         width: 15,
         height: 15,
-        backgroundColor: '#9370DB', // Roxo
+        backgroundColor: '#FFD700', // Marcador amarelo (Aba)
         borderWidth: 2,
         borderColor: 'black',
         position: 'absolute',
@@ -251,13 +261,15 @@ const missionStyles = StyleSheet.create({
     }
 });
 
-// --- Estilos Principais da Tela ---
+
+// --- Estilos Principais da Tela (Com Novos Estilos de Scroll) ---
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FF8C00', 
   },
   scrollContent: {
+    // Não precisa de flexGrow: 1 porque a lista de missões terá altura fixa
     alignItems: 'center',
     paddingTop: 0, 
     paddingBottom: 100, 
@@ -269,12 +281,14 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 10,
     position: 'relative', 
+    marginBottom: 10,
   },
   absoluteIcons: {
     position: 'absolute',
     top: 20,
     right: 10,
     flexDirection: 'row',
+    alignItems: 'center',
     zIndex: 10,
   },
   dahtLogo: {
@@ -285,6 +299,7 @@ const styles = StyleSheet.create({
   settingsButton: {
     width: 30,
     height: 30,
+    marginLeft: 5,
   },
   settingsImage: {
     width: '100%',
@@ -299,7 +314,7 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     backgroundColor: 'white',
     borderWidth: 5,
-    borderColor: '#FFD700', // Borda amarela
+    borderColor: '#FFD700', 
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
@@ -317,7 +332,7 @@ const styles = StyleSheet.create({
     right: 5,
     width: 25,
     height: 25,
-    backgroundColor: '#FFD700', // Placeholder para o badge
+    backgroundColor: '#FFD700', 
     borderRadius: 12.5,
     borderWidth: 2,
     borderColor: 'black',
@@ -336,7 +351,7 @@ const styles = StyleSheet.create({
   statusRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '85%', // Ajuste para centralizar e dar espaço
+    width: '85%', 
     marginBottom: 5,
   },
   statusRowBottom: {
@@ -356,13 +371,24 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: 'black',
   },
-  missionsContainer: {
+  // NOVOS ESTILOS PARA O SCROLL
+  missionsScrollWrapper: {
     width: '90%',
-    backgroundColor: '#0000FF', 
-    padding: 10,
+    // Altura fixa para permitir que o ScrollView funcione internamente
+    height: 380, 
     borderWidth: 5,
     borderColor: '#000',
+    backgroundColor: '#C0C0C0', // Fundo cinza da área de missões
+    padding: 10,
   },
+  missionsScrollView: {
+      flex: 1,
+  },
+  missionsContainer: {
+    // Padding interno para os itens de missão, se necessário
+    paddingBottom: 10, 
+  },
+  // FIM NOVOS ESTILOS
   floatButtons: {
     position: 'absolute',
     bottom: 30,
