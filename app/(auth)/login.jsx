@@ -9,8 +9,8 @@ export default function LoginScreen() {
   const router = useRouter(); 
   
   const handleLogin = () => {
-    // Redireciona para a home e substitui a tela atual (para não voltar para o login)
-    router.replace('/home'); 
+    // AÇÃO CORRIGIDA: Redireciona para a tela de criação de personagem
+    router.replace('/personagem'); 
   };
 
   return (
@@ -21,7 +21,7 @@ export default function LoginScreen() {
         <Image 
           source={DAHT_LOGO} 
           style={styles.logo} 
-          resizeMode="contain" // Propriedade resizeMode corrigida
+          resizeMode="contain" 
         />
       </View>
 

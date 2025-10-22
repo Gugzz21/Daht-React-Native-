@@ -1,4 +1,5 @@
 import { Link } from 'expo-router';
+import { useState } from 'react'; // <-- Importado useState
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // Caminho corrigido: assets está no mesmo nível
@@ -17,17 +18,33 @@ const StatusBar = ({ label, value, color }) => (
   </View>
 );
 
-// Componente para a Missão
-const MissionItem = ({ description, date }) => (
-  <View style={missionStyles.itemContainer}>
-    <View style={missionStyles.checkbox} />
-    <View style={missionStyles.textContainer}>
-      <Text style={missionStyles.descriptionText}>MISSÃO: {description}</Text>
-      <Text style={missionStyles.dateText}>{date}</Text>
+// Componente para a Missão (AGORA COM CHECKBOX)
+const MissionItem = ({ description, date }) => {
+  const [checked, setChecked] = useState(false); // Estado para controlar se a missão está completa
+
+  return (
+    <View style={missionStyles.itemContainer}>
+      
+      {/* Checkbox (agora um TouchableOpacity) */}
+      <TouchableOpacity 
+        style={[
+          missionStyles.checkbox, 
+          checked && missionStyles.checkboxChecked // Aplica estilo se checked for true
+        ]} 
+        onPress={() => setChecked(!checked)} // Alterna o estado ao pressionar
+      >
+        {/* Adiciona um checkmark visual quando a missão está completa */}
+        {checked && <Text style={missionStyles.checkmark}>✓</Text>} 
+      </TouchableOpacity>
+      
+      <View style={missionStyles.textContainer}>
+        <Text style={missionStyles.descriptionText}>MISSÃO: {description}</Text>
+        <Text style={missionStyles.dateText}>{date}</Text>
+      </View>
+      <View style={missionStyles.bookmark} />
     </View>
-    <View style={missionStyles.bookmark} />
-  </View>
-);
+  );
+};
 
 export default function TelaPrincipalScreen() {
   const missions = [
@@ -151,6 +168,17 @@ const missionStyles = StyleSheet.create({
     borderColor: '#333',
     marginRight: 10,
     backgroundColor: '#fff',
+    justifyContent: 'center', // Adicionado para centralizar o checkmark
+    alignItems: 'center',     // Adicionado para centralizar o checkmark
+  },
+  checkboxChecked: {
+      backgroundColor: '#38B000', // Verde quando a missão está completa
+      borderColor: 'black',
+  },
+  checkmark: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   textContainer: {
     flex: 1,
