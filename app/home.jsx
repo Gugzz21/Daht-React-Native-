@@ -1,6 +1,21 @@
-import { Link } from 'expo-router';
-import React, { useState } from 'react';
-import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+// Arquivo: app/home.jsx
+
+import { Link, useRouter } from 'expo-router'; // Importa Link e useRouter
+import React, { useEffect, useState } from 'react'; // Importa useEffect
+import {
+  Alert // Importa Alert
+  ,
+  Image,
+  ImageBackground,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
+// CORREÇÃO DA IMPORTAÇÃO (estava '../(services)/api')
+import api from './services/api'; // Importa a configuração da API
 
 // Caminhos dos Assets
 const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
@@ -10,6 +25,7 @@ const CHARACTER_AVATAR = require('../assets/snoopy.png');
 const HEART_ICON = require('../assets/heart-icon.png'); 
 const COIN_ICON = require('../assets/coin-icon.png'); 
 const ENERGY_ICON = require('../assets/energy-icon.png'); 
+const SHOP_ICON = require('../assets/coin-icon.png'); // Reutilizando o ícone de moeda para a loja
 
 // --- Componente Reusável para Barras de Status ---
 const StatusBar = ({ value, color, iconSource }) => ( 
@@ -30,7 +46,8 @@ const StatusBar = ({ value, color, iconSource }) => (
 );
 
 // --- Componente para Item de Missão (com Checkbox) ---
-const MissionItem = React.memo(({ description, completed, onToggle }) => (
+// Adicionada a prop 'onEdit'
+const MissionItem = React.memo(({ description, completed, onToggle, onEdit }) => (
   <View style={missionStyles.itemContainer}>
     <TouchableOpacity 
       style={missionStyles.checkbox} 
@@ -44,42 +61,91 @@ const MissionItem = React.memo(({ description, completed, onToggle }) => (
         MISSÃO: {description}
       </Text>
       <Text style={missionStyles.dateText}>
-        data finalizacao
+        {completed ? "Finalizada" : "data finalizacao"}
       </Text>
     </View>
-    <View style={missionStyles.bookmark} />
+    
+    {/* Marcador amarelo clicável para EDITAR */}
+    <TouchableOpacity style={missionStyles.bookmark} onPress={onEdit}>
+      <View />
+    </TouchableOpacity>
   </View>
 ));
 
 // --- Tela Principal ---
 export default function TelaPrincipalScreen() {
-  const [missions, setMissions] = useState(
-    Array.from({ length: 15 }, (_, i) => ({
-      id: i + 1,
-      description: `descrição da missão ${i + 1}`,
-      completed: i % 3 === 0, 
-    }))
-  );
+  const [missions, setMissions] = useState([]); // Inicia com array vazio
+  const router = useRouter(); // Instancia o router
+
+  // Busca as missões da API quando a tela é carregada
+  useEffect(() => {
+    // TODO: Você precisa do ID do personagem logado!
+    // Estou usando '1' como exemplo.
+    const personagemId = 1; 
+
+    const fetchMissions = async () => {
+      try {
+        // NOTA: O ideal seria o backend ter: /api/missao/listarPorPersonagem/{personagemId}
+        const response = await api.get('/missao/listar'); // Usando /listar por enquanto
+        setMissions(response.data.map(m => ({
+          ...m,
+          // Ajuste 'completed' com base no seu DTO (Ex: m.status === 'COMPLETA')
+          completed: m.status === -1 // Assumindo que status -1 = deletado/completo
+        })));
+      } catch (error) {
+        console.error("Erro ao buscar missões:", error);
+        Alert.alert("Erro", "Não foi possível carregar as missões.");
+      }
+    };
+    
+    fetchMissions();
+    // TODO: Adicionar um listener de 'focus' para recarregar as missões
+    // quando o usuário voltar do modal de criação/edição.
+  }, []);
 
   const toggleMission = (id) => {
+    // TODO: Implementar a lógica de 'completar' (PUT /api/missao/atualizar)
+    console.log("Marcar como completa (não implementado):", id);
+    // Atualiza o estado localmente (visualmente)
     setMissions(missions.map(m => 
       m.id === id ? { ...m, completed: !m.completed } : m
     ));
   };
   
+  // Navega para o modal de criação de missão
   const handleAddMission = () => {
-      const newMission = {
-          id: missions.length + 1,
-          description: `Nova Missão ${missions.length + 1}`,
-          completed: false,
-      };
-      setMissions([...missions, newMission]);
-      console.log("Adicionar Missão");
+      router.push('/missaoModal'); // Abre o modal sem passar ID
   };
 
+  // Deleta (logicamente) as missões marcadas como completas
   const handleDeleteMissions = () => {
-      setMissions(missions.filter(m => !m.completed));
-      console.log("Deletar Missões");
+    Alert.alert(
+      "Excluir Missões",
+      "Deseja excluir (logicamente) todas as missões completadas?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Excluir", 
+          style: "destructive", 
+          onPress: async () => {
+            const completedMissions = missions.filter(m => m.completed);
+            try {
+              // Deleta uma por uma
+              for (const mission of completedMissions) {
+                // DELETE /api/missao/deletar/{id}
+                await api.delete(`/missao/deletar/${mission.id}`);
+              }
+              // Atualiza a lista na tela
+              setMissions(missions.filter(m => !m.completed));
+              Alert.alert("Sucesso", "Missões completadas foram excluídas.");
+            } catch (error) {
+              console.error("Erro ao deletar missões:", error);
+              Alert.alert("Erro", "Não foi possível excluir as missões.");
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -98,6 +164,20 @@ export default function TelaPrincipalScreen() {
             <View style={styles.absoluteIcons}>
               <Image source={DAHT_LOGO} style={styles.dahtLogo} resizeMode="contain" />
               
+                {/* =================================================
+                  CORREÇÃO DO ERRO 'asChild':
+                  Cada <Link> envolve exatamente UM <TouchableOpacity>
+                  =================================================
+                */}
+
+                {/* Botão para a Loja de Prêmios */}
+              <Link href="/premios" asChild>
+                <TouchableOpacity style={styles.settingsButton}>
+                  <Image source={SHOP_ICON} style={styles.settingsImage} resizeMode="contain" />
+                </TouchableOpacity>
+              </Link>
+
+                {/* Botão para Configurações */}
               <Link href="/configuracoes" asChild>
                 <TouchableOpacity style={styles.settingsButton}>
                   <Image source={SETTINGS_ICON} style={styles.settingsImage} resizeMode="contain" />
@@ -140,9 +220,11 @@ export default function TelaPrincipalScreen() {
                   {missions.map(mission => (
                     <MissionItem 
                       key={mission.id} 
-                      description={mission.description} 
+                      description={mission.descricao} // Usa a descrição da API
                       completed={mission.completed} 
                       onToggle={() => toggleMission(mission.id)}
+                      // Passa o ID da missão para o modal de edição
+                      onEdit={() => router.push({ pathname: '/missaoModal', params: { id: mission.id }})}
                     />
                   ))}
               </ScrollView>
@@ -249,16 +331,20 @@ const missionStyles = StyleSheet.create({
         marginTop: 2, 
     },
     bookmark: {
-        width: 15,
-        height: 15,
-        backgroundColor: '#FFD700', 
-        borderWidth: 2,
-        borderColor: 'black',
+        // Estilo do "quadrado amarelo" clicável
         position: 'absolute',
         top: 0,
         right: 0,
-        borderTopWidth: 0,
-        borderRightWidth: 0,
+        width: 30, // Área de clique
+        height: 30, // Área de clique
+        // Estilo visual
+        borderTopWidth: 15,
+        borderRightWidth: 15,
+        borderTopColor: '#FFD700',
+        borderRightColor: '#FFD700',
+        borderBottomColor: 'transparent',
+        borderLeftColor: 'transparent',
+        borderBottomLeftRadius: 3,
     }
 });
 
@@ -266,6 +352,7 @@ const missionStyles = StyleSheet.create({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: '#FF8C00', // Garante que a área segura tenha a cor de fundo
   },
   container: {
     flex: 1,
@@ -286,7 +373,7 @@ const styles = StyleSheet.create({
   },
   absoluteIcons: {
     position: 'absolute',
-    top: 20,
+    top: 40, // Ajustado para descer um pouco (devido ao SafeAreaView)
     right: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -300,7 +387,7 @@ const styles = StyleSheet.create({
   settingsButton: {
     width: 30,
     height: 30,
-    marginLeft: 5,
+    marginLeft: 10, // Espaçamento entre os ícones
   },
   settingsImage: {
     width: '100%',
