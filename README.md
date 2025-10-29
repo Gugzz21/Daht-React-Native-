@@ -1,51 +1,83 @@
-# Welcome to your Expo app 👋
+# 🎮 Daht - Agenda Gamificada (React Native)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Este é o repositório do aplicativo mobile (frontend) para o projeto **Daht**, uma agenda de tarefas gamificada. O objetivo do aplicativo é motivar o usuário a completar suas tarefas diárias ("Missões") oferecendo recompensas virtuais, como Ouro e XP, para um personagem.
 
-## Get started
+Este projeto foi desenvolvido em **React Native** utilizando **Expo** e se conecta a um backend **Spring Boot** (que gerencia as regras de negócio e o banco de dados).
 
-1. Install dependencies
+---
 
-   ```bash
-   npm install
-   ```
+## ✨ Funcionalidades Principais
 
-2. Start the app
+* **🔒 Autenticação:** Telas de Login e Registro de usuário.
+* **👤 Personagem:** O usuário possui um personagem com Nível, XP (Experiência), Vida e Ouro.
+* **🎯 Gerenciamento de Missões (CRUD):**
+    * Criar novas missões (tarefas).
+    * Listar missões diárias, semanais ou únicas.
+    * Editar missões existentes.
+    * Marcar missões como completas (recebendo Ouro e XP).
+    * Deletar missões.
+* **🏆 Loja de Prêmios:** Uma tela onde o usuário pode gastar o Ouro ganho para "comprar" prêmios virtuais pré-cadastrados.
+* **⚙️ Configurações:** Telas para o usuário gerenciar seu perfil e as configurações do personagem (como alterar nickname ou avatar).
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## 🛠️ Tecnologias Utilizadas
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+* **React Native**
+* **Expo** (com Expo Router para navegação baseada em arquivos)
+* **Axios** (para comunicação com a API REST)
+* **JavaScript (ES6+)**
+* **CSS-in-JS** (StyleSheet)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+---
 
-## Get a fresh project
+## 🚀 Como Executar o Projeto
 
-When you're ready, run:
+### ⚠️ Pré-requisitos
 
-```bash
-npm run reset-project
-```
+1.  **Node.js** (versão LTS recomendada).
+2.  **npm** ou **yarn**.
+3.  O aplicativo **Expo Go** instalado no seu celular (Android ou iOS).
+4.  O **Backend (Spring Boot) do Daht** deve estar em execução na sua rede local.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 🏃 Passos para Execução
 
-## Learn more
+1.  **Clone o repositório:**
+    ```bash
+    git clone [https://github.com/seu-usuario/Daht-React-Native-.git](https://github.com/seu-usuario/Daht-React-Native-.git)
+    cd Daht-React-Native-
+    ```
 
-To learn more about developing your project with Expo, look at the following resources:
+2.  **Instale as dependências:**
+    ```bash
+    npm install
+    ```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+3.  **Configure a Conexão com a API:**
+    * Abra o arquivo `app/services/api.js`.
+    * Encontre a variável `API_URL`.
+    * **Altere o IP** para o endereço de IP da máquina onde o seu backend Spring Boot está rodando. (Ex: `http://192.168.1.10:8080/api`).
 
-## Join the community
+4.  **Inicie o servidor de desenvolvimento Expo:**
+    ```bash
+    npx expo start
+    ```
 
-Join our community of developers creating universal apps.
+5.  **Acesse o aplicativo:**
+    * Abra o aplicativo **Expo Go** no seu celular.
+    * Escaneie o QR Code que apareceu no terminal (ou na página web que abriu).
+    * O aplicativo será carregado no seu dispositivo.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-# Daht-React-Native-
+---
+
+## 🧑‍💻 Autor
+
+* **Gustavo Diniz**
+
+---
+
+## 📚 Recursos Adicionais do Expo
+
+* [Documentação do Expo](https://docs.expo.dev/): Aprenda os fundamentos e tópicos avançados.
+* [Documentação do Expo Router](https://docs.expo.dev/router/introduction/): Entenda a navegação baseada em arquivos.
+* [Comunidade no Discord](https://chat.expo.dev): Converse com outros usuários do Expo e tire dúvidas.
