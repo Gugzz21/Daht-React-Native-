@@ -10,6 +10,7 @@ const CHARACTER_AVATAR = require('../assets/snoopy.png');
 const HEART_ICON = require('../assets/heart-icon.png');
 const COIN_ICON = require('../assets/coin-icon.png');
 const ENERGY_ICON = require('../assets/energy-icon.png');
+const SHOP_ICON = require('../assets/shop-icon.png'); 
 
 // === Barra de Status ===
 const StatusBar = ({ value, iconSource, barColor }) => (
@@ -75,14 +76,24 @@ export default function TelaPrincipalScreen() {
       <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
         
         {/* === Ícones no canto superior direito === */}
-        <View style={styles.topRightCorner}>
-          <Image source={DAHT_LOGO} style={styles.logoTop} resizeMode="contain" />
-          <Link href="/configuracoes" asChild>
-            <TouchableOpacity>
-              <Image source={SETTINGS_ICON} style={styles.configTop} resizeMode="contain" />
-            </TouchableOpacity>
-          </Link>
-        </View>
+        
+
+<View style={styles.topRightCorner}>
+  <Image source={DAHT_LOGO} style={styles.logoTop} resizeMode="contain" />
+  
+  <Link href="/configuracoes" asChild>
+    <TouchableOpacity>
+      <Image source={SETTINGS_ICON} style={styles.configTop} resizeMode="contain" />
+    </TouchableOpacity>
+  </Link>
+
+  <Link href="/premios" asChild>
+    <TouchableOpacity>
+      <Image source={SHOP_ICON} style={styles.shopIcon} resizeMode="contain" />
+    </TouchableOpacity>
+  </Link>
+</View>
+
 
 
         <View style={styles.header}>
@@ -145,6 +156,12 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
 
+  shopIcon: {
+  width: 42,
+  height: 42,
+},
+
+
   // === Ícones no canto superior direito ===
   topRightCorner: {
     position: 'absolute',
@@ -154,14 +171,14 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   logoTop: {
-    width: 40,
-    height: 40,
-    marginBottom: 4,
+    width: 32,
+    height: 32,
+  
   },
-  configTop: {
-    width: 28,
-    height: 28,
-  },
+ configTop: {
+  width: 42,
+  height: 42,
+},
 
   header: {
     alignItems: 'center',
