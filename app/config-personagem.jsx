@@ -1,165 +1,210 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-// Assumindo que os assets estão disponíveis no diretório 'assets'
+// === Assets ===
+const ICON_HEART = require('../assets/heart-icon.png');
+const ICON_GOLD = require('../assets/coin-icon.png');
+const ICON_XP = require('../assets/energy-icon.png');
+const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
 const DAHT_LOGO = require('../assets/daht-logo.png');
-const CHARACTER_AVATAR = require('../assets/character-avatar.png'); 
-const SETTINGS_ICON = require('../assets/configuracao-icon.png'); // Substitua pelo caminho real do ícone de engrenagem
-const DEFAULT_AVATAR = require('../assets/default-avatar.png'); // Imagem de usuário genérica
+const CHARACTER_AVATAR = require('../assets/character-avatar.png');
+const SETTINGS_ICON = require('../assets/configuracao-icon.png');
+const DEFAULT_AVATAR = require('../assets/default-avatar.png');
 
-// --- Componente Reusável para Barras de Status (como em home.jsx) ---
-const StatusBar = ({ value, color, icon }) => (
-  <View style={statusStyles.barContainer}>
-    <View style={[statusStyles.barLabel, { backgroundColor: color }]}>
-      <Text style={statusStyles.labelIcon}>{icon}</Text>
-    </View>
-    <View style={statusStyles.barValue}>
-      <Text style={statusStyles.valueText}>{value}</Text>
+// === Barra de Status ===
+const StatusBar = ({ value, iconSource, barColor }) => (
+  <View style={[statusStyles.barContainer]}>
+    <View style={[statusStyles.fill, { backgroundColor: barColor }]}>
+      <Image source={iconSource} style={statusStyles.icon} resizeMode="contain" />
+      <Text style={statusStyles.value}>{value}</Text>
     </View>
   </View>
 );
 
-// --- Tela de Configuração do Personagem ---
+
+
+
+// === Tela Configuração de Personagem ===
 export default function ConfigPersonagemScreen() {
-  const router = useRouter(); 
-  const [nickname, setNickname] = useState('PERSONAGEM NOME'); // Nome atual
+  const router = useRouter();
+  const [nickname, setNickname] = useState('PERSONAGEM NOME');
   const [newNickname, setNewNickname] = useState('');
 
   const handleSave = () => {
-    // Implemente a lógica de salvamento aqui (API, AsyncStorage, etc.)
-    Alert.alert("Salvo", `As configurações do personagem foram salvas! Novo Nickname: ${newNickname || nickname}`);
-    // Após salvar, você pode voltar para a tela principal
+    Alert.alert(
+      'Salvo',
+      `As configurações do personagem foram salvas! Novo Nickname: ${
+        newNickname || nickname
+      }`
+    );
     router.replace('/home');
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent} style={styles.container}>
-      
-      {/* Informações do Personagem (Topo da Tela) */}
-      <View style={styles.header}>
-        <Image 
-          source={CHARACTER_AVATAR} // Usando o avatar do personagem
-          style={styles.avatar} 
-          resizeMode="contain"
-        />
-        {/* Nível (Assumindo que o pequeno ícone amarelo com '1' é um nível) */}
-        <View style={styles.levelBadge}>
+    <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        
+        {/* === Ícones no canto superior direito === */}
+        <View style={styles.topRightCorner}>
+          <Image source={DAHT_LOGO} style={styles.logoTop} resizeMode="contain" />
+          <TouchableOpacity onPress={() => router.push('/configuracoes')}>
+            <Image source={SETTINGS_ICON} style={styles.configTop} resizeMode="contain" />
+          </TouchableOpacity>
+        </View>
+
+        {/* === Cabeçalho do Personagem === */}
+        <View style={styles.header}>
+          <Image source={CHARACTER_AVATAR || DEFAULT_AVATAR} style={styles.avatar} resizeMode="contain" />
+
+          <View style={styles.levelBadge}>
             <Text style={styles.levelText}>1</Text>
-        </View>
-        
-        <Text style={styles.characterName}>{nickname}</Text>
-        
-        {/* Ícones de Canto */}
-        <Image source={DAHT_LOGO} style={styles.logoCorner} resizeMode="contain" />
-        
-        {/* Barras de Status */}
-        <View style={styles.statusRow}>
-          <StatusBar value={100} color="#E83A41" icon="❤️" />
-          <StatusBar value={1000} color="#FFD700" icon="💰" />
-          <StatusBar value={100} color="#38B000" icon="✨" />
-        </View>
+          </View>
+
+          <Text style={styles.characterName}>{nickname}</Text>
+
+          {/* Barras de Status */}
+          <View style={styles.statusGroup}>
+        <StatusBar value={100} iconSource={ICON_HEART} barColor="#E83A41" />
+        <StatusBar value={1000} iconSource={ICON_GOLD} barColor="#FFD700" />
+      </View>
+      <View style={styles.statusSingle}>
+        <StatusBar value={100} iconSource={ICON_XP} barColor="#38B000" />
       </View>
 
-      {/* Formulário de Configuração (Parte inferior da imagem) */}
-      <View style={styles.formContainer}>
-        
-        {/* Alterar Nickname */}
-        <Text style={styles.label}>Alterar Nickname:</Text>
-        <TextInput 
-          style={styles.inputLine} 
-          placeholderTextColor="white" 
-          value={newNickname}
-          onChangeText={setNewNickname}
-          placeholder={nickname}
-        />
+             </View>
 
-        {/* Alterar Foto de Perfil */}
-        <Text style={styles.label}>Alterar foto de Perfil:</Text>
-        <Text style={styles.uploadLabel}>Upload imagem:</Text>
-        <View style={styles.uploadBox} /> 
-        {/* Aqui seria a lógica para selecionar e fazer upload da imagem */}
+    
 
-        {/* Botão Salvar */}
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.buttonText}>Salvar</Text>
-        </TouchableOpacity>
-      </View>
-      
-    </ScrollView>
+
+        {/* === Formulário de Configuração === */}
+        <View style={styles.formContainer}>
+          <Text style={styles.label}>Alterar Nickname:</Text>
+          <TextInput
+            style={styles.inputLine}
+            placeholderTextColor="white"
+            value={newNickname}
+            onChangeText={setNewNickname}
+            placeholder={nickname}
+          />
+
+          <Text style={styles.label}>Alterar foto de Perfil:</Text>
+          <Text style={styles.uploadLabel}>Upload imagem:</Text>
+          <View style={styles.uploadBox} />
+
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.buttonText}>Salvar</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </ImageBackground>
   );
 }
 
+// === Estilos das Barras de Status ===
+// === Barras de Status ===
 const statusStyles = StyleSheet.create({
-    barContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: 5,
-        overflow: 'hidden',
-        marginHorizontal: 5,
-        borderWidth: 2,
-        borderColor: 'black',
-    },
-    barLabel: {
-        padding: 5,
-    },
-    labelIcon: {
-        fontSize: 18,
-    },
-    barValue: {
-        backgroundColor: 'white',
-        padding: 5,
-    },
-    valueText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    }
+  barContainer: {
+    width: 130,
+    height: 25,
+    borderColor: '#000',
+    borderWidth: 2,
+    borderRadius: 5,
+    overflow: 'hidden',
+  },
+  fill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: '100%',
+    paddingHorizontal: 5,
+  },
+  icon: { width: 18, height: 18, marginRight: 5 },
+  value: {
+    fontWeight: 'bold',
+    color: '#000',
+    textAlign: 'center',
+    flex: 1,
+  },
 });
 
+
+
+// === Estilos da Tela ===
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FF8C00', // Laranja de fundo
   },
   scrollContent: {
     alignItems: 'center',
-    paddingTop: 50,
-    paddingBottom: 50,
+    paddingTop: 60,
+    paddingBottom: 60,
   },
+
+  statusGroup: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  marginTop: 10,
+  gap: 10,
+},
+statusSingle: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  marginTop: 5,
+},
+
+
+  // === Ícones no canto superior direito ===
+  topRightCorner: {
+    position: 'absolute',
+    top: 15,
+    right: 15,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  logoTop: {
+    width: 40,
+    height: 40,
+    marginBottom: 5,
+  },
+  configTop: {
+    width: 28,
+    height: 28,
+  },
+
+  // === Cabeçalho ===
   header: {
     width: '100%',
     alignItems: 'center',
-    paddingHorizontal: 20,
     marginBottom: 50,
-  },
-  logoCorner: {
-    position: 'absolute',
-    top: 0,
-    right: 55,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
   },
   avatar: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    marginBottom: 10,
     borderWidth: 4,
-    borderColor: 'white',
+    borderColor: 'black',
+    backgroundColor: 'white',
   },
   levelBadge: {
     position: 'absolute',
-    top: 80, // Ajuste para posicionar sobre o avatar
-    left: '50%',
-    marginLeft: 30, // Ajuste fino
+    top: 100,
+    left: '55%',
     backgroundColor: '#FFD700',
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderWidth: 2,
     borderColor: 'black',
-    zIndex: 10,
   },
   levelText: {
     fontSize: 12,
@@ -170,7 +215,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: 'black',
-    marginBottom: 20,
+    marginTop: 10,
     backgroundColor: 'white',
     paddingHorizontal: 10,
     paddingVertical: 2,
@@ -183,10 +228,11 @@ const styles = StyleSheet.create({
     width: '90%',
     marginTop: 15,
   },
+
+  // === Formulário ===
   formContainer: {
     width: '80%',
     alignItems: 'flex-start',
-    paddingHorizontal: 10,
   },
   label: {
     color: 'white',
@@ -212,7 +258,7 @@ const styles = StyleSheet.create({
   uploadBox: {
     width: '100%',
     height: 40,
-    backgroundColor: '#D3D3D3', // Simula o input cinza da imagem
+    backgroundColor: '#D3D3D3',
     borderWidth: 2,
     borderColor: 'black',
   },
@@ -227,8 +273,7 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: 'black',
     alignSelf: 'center',
-    // Sombra para efeito 3D (opcional)
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
@@ -238,5 +283,5 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 24,
     fontWeight: 'bold',
-  }
+  },
 });

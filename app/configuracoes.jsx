@@ -81,14 +81,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     flexGrow: 1,
   },
-  logoSmall: {
-    position: 'absolute',
-    top: 50, 
-    right: 20,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-  },
+ logoSmall: {
+  position: 'absolute',
+  top: 1, // sobe mais perto da borda
+  right: 1, // encosta mais na lateral
+  width: 40,
+  height: 40,
+},
   backButton: {
     position: 'absolute',
     top: 50, 
