@@ -36,9 +36,20 @@ const MissionItem = ({ description, completed, onToggle }) => (
       <Text style={missionStyles.subtitle}>data finalizacao</Text>
     </View>
 
-    <View style={missionStyles.iconRight}>
+   <View style={missionStyles.iconRight}>
+  <Link
+    href={{
+      pathname: "/missoes/editar",
+      params: { id: description, description }, 
+    }}
+    asChild
+  >
+    <TouchableOpacity>
       <Text style={missionStyles.bookIcon}>📘</Text>
-    </View>
+    </TouchableOpacity>
+  </Link>
+</View>
+
   </View>
 );
 
@@ -138,9 +149,11 @@ export default function TelaPrincipalScreen() {
           <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteMissions}>
             <Text style={styles.iconText}>🗑️</Text>
           </TouchableOpacity>
+          <Link href="/missoes/nova" asChild>
           <TouchableOpacity style={styles.addButton} onPress={handleAddMission}>
             <Text style={styles.iconText}>＋</Text>
           </TouchableOpacity>
+          </Link>
         </View>
       </ImageBackground>
     </SafeAreaView>
