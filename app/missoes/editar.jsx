@@ -19,12 +19,12 @@ export default function EditarMissao() {
 
   // Simulando busca de missão (você pode substituir por async fetch)
   const [missao, setMissao] = useState({
-    descricao: "Derrotar 10 inimigos",
+    descricao: "Descrição...",
     repeticao: true,
-    dificuldade: "Média",
-    efeito: "+100 XP",
-    dataInicio: "10/11/2025",
-    dataFinal: "15/11/2025",
+    dificuldade: "Fácil, Média, Difícil",
+    efeito: "+ ou -",
+    dataInicio: "DD/MM/AAAA",
+    dataFinal: "DD/MM/AAAA",
   });
 
   const handleSalvar = () => {

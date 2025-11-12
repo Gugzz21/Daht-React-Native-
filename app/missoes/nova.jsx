@@ -79,7 +79,7 @@ export default function NovaMissao() {
             <Text style={styles.label}>Efeito:</Text>
             <TextInput
               style={styles.input}
-              placeholder="Ex: +100 XP"
+              placeholder="+ ou - "
               value={efeito}
               onChangeText={setEfeito}
             />
