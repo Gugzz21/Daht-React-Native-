@@ -45,6 +45,9 @@ export default function RegistroScreen() {
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
 
+  // --- Validações e Máscaras ---
+
+  // Máscara de Data (DD/MM/AAAA)
   const handleDateChange = (text) => {
     let cleaned = text.replace(/[^0-9]/g, '');
     if (cleaned.length > 2) cleaned = cleaned.substring(0, 2) + '/' + cleaned.substring(2);
@@ -53,19 +56,103 @@ export default function RegistroScreen() {
     setDataNascimento(cleaned);
   };
 
+  // Máscara de Telefone (Apenas Números)
+  const handlePhoneChange = (text) => {
+    // Remove tudo que não for número
+    const numericValue = text.replace(/[^0-9]/g, '');
+    setTelefone(numericValue);
+  };
+
+  // Validação de Idade (> 8 anos)
+  const isOldEnough = (dateString) => {
+    const [day, month, year] = dateString.split('/').map(Number);
+    const birthDate = new Date(year, month - 1, day);
+    const today = new Date();
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    
+    // Ajusta a idade se o aniversário ainda não aconteceu este ano
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+
+    return age >= 8;
+  };
+
+  // Validação de Data Geral
+  const isValidDate = (dateString) => {
+    const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+    if (!regex.test(dateString)) return false;
+    const [d, m, y] = dateString.split('/').map(Number);
+    const currentYear = new Date().getFullYear();
+    
+    // Ano válido (entre 1900 e hoje)
+    if (y < 1900 || y > currentYear) return false;
+    // Mês válido
+    if (m === 0 || m > 12) return false;
+    
+    // Dias válidos por mês
+    const monthLength = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    if (y % 400 === 0 || (y % 100 !== 0 && y % 4 === 0)) monthLength[1] = 29; // Bissexto
+    
+    return d > 0 && d <= monthLength[m - 1];
+  };
+
+  // Validação de Email (Regex simples)
+  const isValidEmail = (email) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
   const convertDateToApi = (dateString) => {
     const [day, month, year] = dateString.split('/');
     return `${year}-${month}-${day}`;
   };
+  // --------------------------------------------
 
   const handleRegister = async () => {
-    if (senha !== confirmarSenha) { Alert.alert('Erro', 'Senhas não conferem.'); return; }
-    if (!nome || !email || !senha || !dataNascimento) { Alert.alert('Erro', 'Preencha tudo.'); return; }
+    // 1. Validação de Campos Vazios
+    if (!nome || !email || !senha || !dataNascimento || !telefone) {
+      Alert.alert('Atenção', 'Por favor, preencha todos os campos.');
+      return;
+    }
+
+    // 2. Validação de Email
+    if (!isValidEmail(email)) {
+        Alert.alert('Email Inválido', 'Por favor, insira um endereço de email válido.');
+        return;
+    }
+
+    // 3. Validação de Senha (>= 4 caracteres)
+    if (senha.length < 4) {
+        Alert.alert('Senha Fraca', 'A senha deve ter pelo menos 4 caracteres.');
+        return;
+    }
+
+    if (senha !== confirmarSenha) {
+      Alert.alert('Erro de Senha', 'As senhas não coincidem.');
+      return;
+    }
+
+    // 4. Validação de Data e Idade
+    if (!isValidDate(dataNascimento)) {
+      Alert.alert('Data Inválida', 'Insira uma data válida (DD/MM/AAAA).');
+      return;
+    }
+
+    if (!isOldEnough(dataNascimento)) {
+        Alert.alert('Restrição de Idade', 'Você precisa ter pelo menos 8 anos para se registrar.');
+        return;
+    }
 
     try {
-      // 1. Criar
+      // Criação do Payload
       const payload = {
-        nome, email, senha, telefone,
+        nome,
+        email,
+        senha,
+        telefone,
         dataNascimento: convertDateToApi(dataNascimento),
         status: 1,
         roles: ["ROLE_USER"]
@@ -74,26 +161,27 @@ export default function RegistroScreen() {
       const response = await api.post('/usuario/criar', payload);
       
       if (response.status === 201 || response.status === 200) {
-        const novoUserId = response.data.id;
-
-        // 2. Logar para pegar Token
-        const loginRes = await api.post('/usuario/login', { email, password: senha });
-        const token = loginRes.data.token;
         
-        if (token) {
-            await AsyncStorage.setItem('token', token);
-            // SALVA O ID NO STORAGE TAMBÉM (BACKUP DE SEGURANÇA)
-            await AsyncStorage.setItem('usuarioId', novoUserId.toString());
+        // Auto-Login
+        try {
+            const loginRes = await api.post('/usuario/login', { email, password: senha });
+            const token = loginRes.data.token; 
+            
+            if (token) {
+                await AsyncStorage.setItem('token', token);
+                await AsyncStorage.setItem('usuarioId', response.data.id.toString());
+            }
+        } catch (loginError) {
+            console.log("Erro no auto-login", loginError);
         }
 
-        Alert.alert('Sucesso', 'Vamos criar seu personagem!');
-        // Passa o ID também via params
-        router.replace({ pathname: '/personagem', params: { userId: novoUserId } });
+        Alert.alert('Sucesso', 'Conta criada! Vamos criar seu personagem.');
+        router.replace({ pathname: '/personagem', params: { userId: response.data.id } });
       }
 
     } catch (error) {
       console.error("Erro Registro:", error);
-      Alert.alert('Erro', 'Falha ao registrar.');
+      Alert.alert('Erro', 'Falha ao registrar. Verifique se o email já está em uso.');
     }
   };
 
@@ -104,18 +192,47 @@ export default function RegistroScreen() {
           <View style={styles.logoContainer}>
             <Image source={DAHT_LOGO} style={styles.logo} resizeMode="contain" />
           </View>
+
           <View style={styles.formContainer}>
             <FormInput label="Nome" value={nome} onChangeText={setNome} />
-            <FormInput label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" />
-            <FormInput label="Telefone" value={telefone} onChangeText={setTelefone} keyboardType="phone-pad" />
-            <FormInput label="Data de Nascimento" value={dataNascimento} onChangeText={handleDateChange} keyboardType="numeric" maxLength={10} placeholder="DD/MM/AAAA" />
-            <FormInput label="Senha" value={senha} onChangeText={setSenha} secureTextEntry={true} />
+            
+            <FormInput 
+                label="Email" 
+                value={email} 
+                onChangeText={setEmail} 
+                keyboardType="email-address" 
+                placeholder="exemplo@email.com"
+            />
+            
+            <FormInput 
+                label="Telefone (Apenas números)" 
+                value={telefone} 
+                onChangeText={handlePhoneChange} 
+                keyboardType="numeric" 
+                placeholder="11999999999"
+                maxLength={11}
+            />
+            
+            <FormInput 
+              label="Data de Nascimento" 
+              value={dataNascimento} 
+              onChangeText={handleDateChange} 
+              keyboardType="numeric"
+              maxLength={10}
+              placeholder="DD/MM/AAAA"
+            />
+
+            <FormInput label="Senha (Min 4 caracteres)" value={senha} onChangeText={setSenha} secureTextEntry={true} />
             <FormInput label="Confirmar Senha" value={confirmarSenha} onChangeText={setConfirmarSenha} secureTextEntry={true} />
+
             <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
               <Text style={styles.buttonText}>Registrar</Text>
             </TouchableOpacity>
+            
             <Link href="/(auth)/login" asChild>
-              <TouchableOpacity style={styles.backLinkContainer}><Text style={styles.backLinkText}>Voltar para o Login</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.backLinkContainer}>
+                <Text style={styles.backLinkText}>Voltar para o Login</Text>
+              </TouchableOpacity>
             </Link>
           </View>
         </ScrollView>

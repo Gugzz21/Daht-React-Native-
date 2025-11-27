@@ -16,15 +16,12 @@ export default function CriacaoPersonagemScreen() {
   const [imageUri, setImageUri] = useState(null);
   const [userId, setUserId] = useState(null);
 
-  // Carrega o User ID assim que a tela abre
   useEffect(() => {
     const loadId = async () => {
-        // 1. Tenta pegar dos parâmetros de navegação
         if (params.userId) {
             setUserId(parseInt(params.userId, 10));
             return;
         }
-        // 2. Se falhar, tenta pegar do armazenamento local
         const storedId = await AsyncStorage.getItem('usuarioId');
         if (storedId) {
             setUserId(parseInt(storedId, 10));
@@ -60,10 +57,6 @@ export default function CriacaoPersonagemScreen() {
     }
 
     try {
-      console.log("Enviando Payload para o usuário ID:", userId);
-
-      // CORREÇÃO CRÍTICA AQUI:
-      // Alteramos a estrutura para enviar "usuarioId" direto, que é o padrão DTO.
       const payload = {
         nickname: nickname,
         vida: 50.0,
@@ -71,23 +64,24 @@ export default function CriacaoPersonagemScreen() {
         xp: 0.0,
         nivel: 1,
         status: 1,
-        usuarioId: userId // <--- Tente enviar assim (padrão DTO)
-        // Se o seu DTO for muito específico, tente descomentar a linha abaixo e comentar a de cima:
-        // usuario: { id: userId } 
+        usuarioId: userId 
       };
 
       const response = await api.post('/personagem/criar', payload);
 
       if (response.status === 201 || response.status === 200) {
-        await AsyncStorage.setItem('personagemId', response.data.id.toString());
-        if(imageUri) await AsyncStorage.setItem('localAvatarUri', imageUri);
+        const charId = response.data.id.toString();
+        await AsyncStorage.setItem('personagemId', charId);
+        
+        // SALVA COM CHAVE ÚNICA BASEADA NO ID
+        if(imageUri) await AsyncStorage.setItem(`avatar_${charId}`, imageUri);
 
         Alert.alert('Sucesso', 'Personagem criado!');
         router.replace('/home'); 
       }
     } catch (error) {
       console.error("Erro Criação Personagem:", error);
-      Alert.alert('Erro', 'Falha ao criar personagem. Verifique o console.');
+      Alert.alert('Erro', 'Falha ao criar personagem.');
     }
   };
 
@@ -104,7 +98,10 @@ export default function CriacaoPersonagemScreen() {
             ) : (
               <Image source={DEFAULT_AVATAR} style={styles.avatarImage} resizeMode="contain" />
             )}
-            <View style={styles.cameraIconBadge}><Text>📷</Text></View>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+             <Text style={styles.uploadButtonText}>Selecionar Imagem</Text>
           </TouchableOpacity>
 
           <View style={styles.formContainer}>
@@ -132,10 +129,11 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { flexGrow: 1, alignItems: 'center', paddingTop: 50, paddingHorizontal: 20 },
   dahtLogo: { position: 'absolute', top: 10, right: 10, width: 40, height: 40 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#FFF', marginBottom: 30, marginTop: 40 },
-  avatarContainer: { width: 150, height: 150, borderRadius: 75, backgroundColor: 'lightgray', borderWidth: 5, borderColor: '#FFF', justifyContent: 'center', alignItems: 'center', marginBottom: 40 },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#FFF', marginBottom: 20, marginTop: 40 },
+  avatarContainer: { width: 150, height: 150, borderRadius: 75, backgroundColor: 'lightgray', borderWidth: 5, borderColor: '#FFF', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
   avatarImage: { width: '100%', height: '100%', borderRadius: 70 },
-  cameraIconBadge: { position: 'absolute', bottom: 0, right: 0, backgroundColor: 'white', padding: 5, borderRadius: 15 },
+  uploadButton: { backgroundColor: '#E0E0E0', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 5, borderWidth: 2, borderColor: 'black', marginBottom: 20 },
+  uploadButtonText: { color: 'black', fontWeight: 'bold', fontSize: 16 },
   formContainer: { width: '90%' },
   label: { fontSize: 18, color: '#FFF', fontWeight: 'bold', marginTop: 15 },
   input: { width: '100%', height: 45, borderBottomWidth: 2, borderBottomColor: '#FFF', color: '#FFF', fontSize: 20, marginTop: 10 },
