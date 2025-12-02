@@ -1,12 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Dimensions, Image, ImageBackground, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, ImageBackground, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import DahtLogo from '../../components/DahtLogo';
 import api from '../../services/api';
 
 const BACKGROUND_IMAGE = require('../../assets/fundo-site.png');
 const DAHT_LOGO = require('../../assets/daht-logo.png'); 
-const { height } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+// Slightly increased logo size for better visibility on modern devices
+const LOGO_SIZE = Math.min(200, width * 0.52);
 
 export default function LoginScreen() {
   const router = useRouter(); 
@@ -32,9 +35,7 @@ export default function LoginScreen() {
 
   return (
     <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
-      <View style={styles.logoContainer}>
-        <Image source={DAHT_LOGO} style={styles.logo} resizeMode="contain" />
-      </View>
+      <DahtLogo size={LOGO_SIZE} containerStyle={{ marginTop: height * 0.12, marginBottom: 36 }} />
 
       <View style={styles.formContainer}>
         <Text style={styles.label}>Email:</Text>
@@ -66,8 +67,6 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center' },
-  logoContainer: { width: 150, height: 150, borderRadius: 75, backgroundColor: 'black', justifyContent: 'center', alignItems: 'center', marginTop: height * 0.15, marginBottom: 50 },
-  logo: { width: 110, height: 110 },
   formContainer: { width: '80%', alignItems: 'flex-start' },
   label: { color: 'white', fontSize: 16, marginTop: 20 },
   input: { width: '100%', height: 35, borderBottomWidth: 1, borderBottomColor: 'white', color: 'white', fontSize: 18, padding: 0, marginBottom: 5 },

@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
 // IP da sua rede Senac
-const API_URL = 'http://10.136.36.197:8412/api'; 
+const API_URL = 'http://192.168.0.35:8412/api'; 
 
 const api = axios.create({
   baseURL: API_URL,

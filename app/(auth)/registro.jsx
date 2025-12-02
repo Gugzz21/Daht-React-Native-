@@ -3,7 +3,6 @@ import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   Alert,
-  Image,
   ImageBackground,
   SafeAreaView,
   ScrollView,
@@ -11,12 +10,17 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
+  Dimensions,
 } from 'react-native';
+import DahtLogo from '../../components/DahtLogo';
 import api from '../../services/api';
 
 const BACKGROUND_IMAGE = require('../../assets/fundo-site.png');
 const DAHT_LOGO = require('../../assets/daht-logo.png');
+const { width } = Dimensions.get('window');
+// Slightly increased logo size for better visibility on modern devices
+const LOGO_SIZE = Math.min(180, width * 0.48);
 
 const FormInput = ({ label, value, onChangeText, secureTextEntry, keyboardType, maxLength, placeholder }) => (
   <View style={inputStyles.group}>
@@ -189,9 +193,7 @@ export default function RegistroScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
         <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <View style={styles.logoContainer}>
-            <Image source={DAHT_LOGO} style={styles.logo} resizeMode="contain" />
-          </View>
+          <DahtLogo size={LOGO_SIZE} containerStyle={{ marginBottom: 20 }} />
 
           <View style={styles.formContainer}>
             <FormInput label="Nome" value={nome} onChangeText={setNome} />
@@ -251,8 +253,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   container: { flex: 1 },
   scrollContainer: { alignItems: 'center', paddingTop: 40, paddingBottom: 50 },
-  logoContainer: { width: 100, height: 100, borderRadius: 50, backgroundColor: 'black', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
-  logo: { width: 80, height: 80 },
   formContainer: { width: '80%' },
   registerButton: { width: '100%', height: 50, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center', borderRadius: 5, marginTop: 20, borderWidth: 2, borderColor: 'black' },
   buttonText: { color: 'black', fontSize: 20, fontWeight: 'bold' },
