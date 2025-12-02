@@ -2,16 +2,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  Alert,
-  ImageBackground,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Dimensions,
+    Alert,
+    Dimensions,
+    ImageBackground,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import DahtLogo from '../../components/DahtLogo';
 import api from '../../services/api';
