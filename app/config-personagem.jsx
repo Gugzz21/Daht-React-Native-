@@ -3,17 +3,17 @@ import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
-    Alert,
-    Image,
-    ImageBackground,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import api from '../services/api';
+import personagemService from '../services/personagemService';
 
 // Assets
 const ICON_HEART = require('../assets/heart-icon.png');
@@ -49,20 +49,6 @@ export default function ConfigPersonagemScreen() {
   const fetchData = async () => {
     try {
       const charId = await AsyncStorage.getItem('personagemId');
-      
-      if (charId) {
-        // Carrega avatar específico
-        const storedAvatar = await AsyncStorage.getItem(`avatar_${charId}`);
-        if (storedAvatar) setAvatarUri(storedAvatar);
-
-        const response = await api.get(`/personagem/listarPorId/${charId}`);
-        const charData = response.data;
-        setCharacter(charData);
-        setNewNickname(charData.nickname); 
-      } else {
-        Alert.alert("Erro", "Personagem não encontrado.");
-        router.back();
-      }
     } catch (error) {
       console.error("Erro ao carregar dados", error);
       Alert.alert("Erro", "Não foi possível carregar os dados.");
@@ -94,15 +80,15 @@ export default function ConfigPersonagemScreen() {
       }
 
       const payload = {
-        ...character, 
-        nickname: newNickname, 
+        ...character,
+        nickname: newNickname,
         usuarioId: character.usuario ? character.usuario.id : await AsyncStorage.getItem('usuarioId')
       };
 
-      await api.put(`/personagem/atualizar/${character.id}`, payload);
+      await personagemService.atualizar(character.id, payload);
 
       Alert.alert('Sucesso', 'Personagem atualizado!');
-      router.replace('/home'); 
+      router.replace('/home');
 
     } catch (error) {
       console.error("Erro ao atualizar", error);
@@ -121,7 +107,7 @@ export default function ConfigPersonagemScreen() {
   return (
     <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        
+
         <View style={styles.topRightCorner}>
           <Image source={DAHT_LOGO} style={styles.logoTop} resizeMode="contain" />
           <TouchableOpacity onPress={() => router.push('/configuracoes')}>
@@ -131,11 +117,11 @@ export default function ConfigPersonagemScreen() {
 
         <View style={styles.header}>
           <TouchableOpacity onPress={pickImage} style={styles.avatarWrapper}>
-             <Image 
-                source={avatarUri ? { uri: avatarUri } : DEFAULT_AVATAR} 
-                style={styles.avatar} 
-                resizeMode="cover" 
-             />
+            <Image
+              source={avatarUri ? { uri: avatarUri } : DEFAULT_AVATAR}
+              style={styles.avatar}
+              resizeMode="cover"
+            />
           </TouchableOpacity>
 
           <View style={styles.levelBadge}>
@@ -165,9 +151,9 @@ export default function ConfigPersonagemScreen() {
 
           <Text style={styles.label}>Alterar foto de Perfil:</Text>
           <Text style={styles.uploadLabel}>Toque na imagem acima ou no botão.</Text>
-          
+
           <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-             <Text style={styles.uploadButtonText}>Selecionar Imagem</Text>
+            <Text style={styles.uploadButtonText}>Selecionar Imagem</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>

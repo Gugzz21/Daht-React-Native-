@@ -3,32 +3,32 @@ import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import api from '../services/api';
+import personagemService from '../services/personagemService';
 
 const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
 const DAHT_LOGO = require('../assets/daht-logo.png');
-const DEFAULT_AVATAR = require('../assets/default-avatar.png'); 
+const DEFAULT_AVATAR = require('../assets/default-avatar.png');
 
 export default function CriacaoPersonagemScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams(); 
+  const params = useLocalSearchParams();
   const [nickname, setNickname] = useState('');
   const [imageUri, setImageUri] = useState(null);
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const loadId = async () => {
-        if (params.userId) {
-            setUserId(parseInt(params.userId, 10));
-            return;
-        }
-        const storedId = await AsyncStorage.getItem('usuarioId');
-        if (storedId) {
-            setUserId(parseInt(storedId, 10));
-        } else {
-            Alert.alert("Erro", "Usuário não identificado. Faça login novamente.");
-            router.replace('/(auth)/login');
-        }
+      if (params.userId) {
+        setUserId(parseInt(params.userId, 10));
+        return;
+      }
+      const storedId = await AsyncStorage.getItem('usuarioId');
+      if (storedId) {
+        setUserId(parseInt(storedId, 10));
+      } else {
+        Alert.alert("Erro", "Usuário não identificado. Faça login novamente.");
+        router.replace('/(auth)/login');
+      }
     };
     loadId();
   }, [params.userId]);
@@ -52,8 +52,8 @@ export default function CriacaoPersonagemScreen() {
     }
 
     if (!userId) {
-        Alert.alert("Erro", "ID do usuário inválido.");
-        return;
+      Alert.alert("Erro", "ID do usuário inválido.");
+      return;
     }
 
     try {
@@ -61,24 +61,11 @@ export default function CriacaoPersonagemScreen() {
         nickname: nickname,
         vida: 50.0,
         ouro: 100.0,
-        xp: 0.0,
-        nivel: 1,
-        status: 1,
-        usuarioId: userId 
+        usuario: { id: userId }
       };
 
-      const response = await api.post('/personagem/criar', payload);
-
-      if (response.status === 201 || response.status === 200) {
-        const charId = response.data.id.toString();
-        await AsyncStorage.setItem('personagemId', charId);
-        
-        // SALVA COM CHAVE ÚNICA BASEADA NO ID
-        if(imageUri) await AsyncStorage.setItem(`avatar_${charId}`, imageUri);
-
-        Alert.alert('Sucesso', 'Personagem criado!');
-        router.replace('/home'); 
-      }
+      await personagemService.criar(payload);
+      router.replace('/home');
     } catch (error) {
       console.error("Erro Criação Personagem:", error);
       Alert.alert('Erro', 'Falha ao criar personagem.');
@@ -91,7 +78,7 @@ export default function CriacaoPersonagemScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Image source={DAHT_LOGO} style={styles.dahtLogo} resizeMode="contain" />
           <Text style={styles.title}>Crie seu Avatar</Text>
-          
+
           <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
             {imageUri ? (
               <Image source={{ uri: imageUri }} style={styles.avatarImage} />
@@ -101,18 +88,18 @@ export default function CriacaoPersonagemScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-             <Text style={styles.uploadButtonText}>Selecionar Imagem</Text>
+            <Text style={styles.uploadButtonText}>Selecionar Imagem</Text>
           </TouchableOpacity>
 
           <View style={styles.formContainer}>
-              <Text style={styles.label}>Apelido (Nickname):</Text>
-              <TextInput
-                style={styles.input}
-                value={nickname}
-                onChangeText={setNickname}
-                placeholder="Ex: GuerreiroDaht"
-                placeholderTextColor="#DDD"
-              />
+            <Text style={styles.label}>Apelido (Nickname):</Text>
+            <TextInput
+              style={styles.input}
+              value={nickname}
+              onChangeText={setNickname}
+              placeholder="Ex: GuerreiroDaht"
+              placeholderTextColor="#DDD"
+            />
           </View>
 
           <TouchableOpacity style={styles.createButton} onPress={handleCreate}>

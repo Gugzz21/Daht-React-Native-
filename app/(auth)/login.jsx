@@ -3,33 +3,37 @@ import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Dimensions, ImageBackground, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import DahtLogo from '../../components/DahtLogo';
-import api from '../../services/api';
+import usuarioService from '../../services/usuarioService';
 
 const BACKGROUND_IMAGE = require('../../assets/fundo-site.png');
-const DAHT_LOGO = require('../../assets/daht-logo.png'); 
+const DAHT_LOGO = require('../../assets/daht-logo.png');
 const { width, height } = Dimensions.get('window');
 // Slightly increased logo size for better visibility on modern devices
 const LOGO_SIZE = Math.min(200, width * 0.52);
 
 export default function LoginScreen() {
-  const router = useRouter(); 
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
-    try {
-      const loginPayload = { email: email, password: password }; 
-      const response = await api.post('/usuario/login', loginPayload);
+    if (!email || !password) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
+      return;
+    }
 
-      if (response.status === 200) {
-        const { token } = response.data;
-        await AsyncStorage.setItem('token', token);
-        // Assumindo que o usuário já tem personagem. A Home vai tentar carregar.
-        router.replace('/home'); 
+    try {
+      const response = await usuarioService.login({ email, password });
+
+      if (response.data && response.data.id) {
+        await AsyncStorage.setItem('usuarioId', response.data.id.toString());
+        router.replace('/home');
+      } else {
+        Alert.alert('Erro', 'Credenciais inválidas.');
       }
     } catch (error) {
-      console.error(error);
-      Alert.alert('Erro', 'Credenciais inválidas.');
+      console.error("Erro Login:", error);
+      Alert.alert('Erro', 'Falha ao realizar login.');
     }
   };
 
@@ -39,20 +43,21 @@ export default function LoginScreen() {
 
       <View style={styles.formContainer}>
         <Text style={styles.label}>Email:</Text>
-        <TextInput 
-            style={styles.input} 
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
         />
         <Text style={styles.label}>Senha:</Text>
-        <TextInput 
-            style={styles.input} 
-            secureTextEntry={true} 
-            value={password}
-            onChangeText={setPassword}
+        <TextInput
+          style={styles.input}
+          secureTextEntry={true}
+          value={password}
+          onChangeText={setPassword}
         />
-        <Link href="/(auth)/registro" asChild> 
+        <Link href="/(auth)/registro" asChild>
           <TouchableOpacity>
             <Text style={styles.registerLink}>ainda não possui conta?</Text>
           </TouchableOpacity>

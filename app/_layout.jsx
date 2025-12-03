@@ -6,7 +6,7 @@ export default function RootLayout() {
       {/* Rota inicial/Auth layout */}
       <Stack.Screen name="index" />
       {/* Agrupamento das telas de autenticação */}
-      <Stack.Screen name="(auth)/_layout" />
+      <Stack.Screen name="(auth)" />
       {/* Tela Home - Tela Principal */}
       <Stack.Screen name="home" />
       {/* Tela de Criação de Personagem */}

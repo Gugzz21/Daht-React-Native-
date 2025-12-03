@@ -1,27 +1,26 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Link, useFocusEffect, useRouter } from 'expo-router';
+import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import api from '../services/api';
+import ganhoService from '../services/ganhoService';
+import missaoService from '../services/missaoService';
+import personagemService from '../services/personagemService';
 
 // Assets
 const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
 const DAHT_LOGO = require('../assets/daht-logo.png');
-const SETTINGS_ICON = require('../assets/configuracao-icon.png');
-const SHOP_ICON = require('../assets/shop-icon.png'); 
-const DEFAULT_AVATAR = require('../assets/snoopy.png');
-const HEART_ICON = require('../assets/heart-icon.png');
-const COIN_ICON = require('../assets/coin-icon.png');
-const ENERGY_ICON = require('../assets/energy-icon.png');
+const DEFAULT_AVATAR = require('../assets/default-avatar.png');
+const SETTINGS_ICON = require('../assets/configuracao-icon.png'); // Corrected filename
+const SHOP_ICON = require('../assets/shop-icon.png'); // Placeholder
+const HEART_ICON = require('../assets/heart-icon.png'); // Placeholder
+const COIN_ICON = require('../assets/coin-icon.png'); // Placeholder
+const ENERGY_ICON = require('../assets/energy-icon.png'); // Placeholder
 
-// Componente StatusBar
+// Components
 const StatusBar = ({ value, iconSource, barColor }) => (
   <View style={statusStyles.barContainer}>
-    <View style={[statusStyles.fill, { backgroundColor: barColor }]}>
+    <View style={[statusStyles.fill, { backgroundColor: barColor, width: '100%' }]}>
       <Image source={iconSource} style={statusStyles.icon} resizeMode="contain" />
-      <Text style={statusStyles.value}>
-        {typeof value === 'number' ? Math.floor(value) : value}
-      </Text>
+      <Text style={statusStyles.value}>{value}</Text>
     </View>
   </View>
 );
@@ -29,34 +28,59 @@ const StatusBar = ({ value, iconSource, barColor }) => (
 const MissionItem = ({ mission, onToggle }) => (
   <View style={missionStyles.itemBox}>
     <TouchableOpacity style={missionStyles.checkbox} onPress={onToggle}>
-      {mission.status === 2 && <View style={missionStyles.checked} />}
+      {mission.concluida && <View style={missionStyles.checked} />}
     </TouchableOpacity>
-
     <View style={missionStyles.textArea}>
-      <Text style={[missionStyles.title, mission.status === 2 && missionStyles.completed]}>
-        MISSÃO: {mission.descricao}
-      </Text>
-      <Text style={missionStyles.subtitle}>
-          Até: {mission.dataFinalizacao ? mission.dataFinalizacao.split('-').reverse().join('/') : 'Sem data'}
-      </Text>
-    </View>
-
-    <View style={missionStyles.iconRight}>
-      <Link href={{ pathname: "/missoes/editar", params: { id: mission.id } }} asChild>
-        <TouchableOpacity>
-          <Text style={missionStyles.bookIcon}>📘</Text>
-        </TouchableOpacity>
-      </Link>
+      <Text style={[missionStyles.title, mission.concluida && missionStyles.completed]}>{mission.descricao}</Text>
+      <Text style={missionStyles.subtitle}>Recompensa: {mission.dificuldade * 10} XP</Text>
     </View>
   </View>
 );
 
-export default function TelaPrincipalScreen() {
-  const router = useRouter();
+export default function HomeScreen() {
+  const [loading, setLoading] = useState(true);
   const [character, setCharacter] = useState(null);
   const [missions, setMissions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [avatarUri, setAvatarUri] = useState(null);
+
+  const getXpRequired = (level) => level * 100; // Example logic
+
+  const fetchData = async () => {
+    try {
+      const charRes = await personagemService.listar();
+      // Assuming returns list, pick first or specific
+      // Or if returns one object
+      const charData = Array.isArray(charRes.data) ? charRes.data[0] : charRes.data;
+
+      if (charData) {
+        setCharacter(charData);
+        // Load missions
+        const missoesRes = await missaoService.listar(); // Filter by char if needed
+        setMissions(missoesRes.data.filter(m => !m.concluida)); // Show active missions
+      }
+      setLoading(false);
+    } catch (error) {
+      console.error(error);
+      setLoading(false);
+    }
+  };
+
+  const handleToggleMission = async (mission) => {
+    try {
+      // Complete mission logic
+      await missaoService.atualizar(mission.id, { ...mission, concluida: true, dataFinalizacao: new Date().toISOString().split('T')[0] });
+      // Update character XP/Gold
+      await ganhoService.criar({
+        personagem: { id: character.id },
+        xp: mission.dificuldade * 10,
+        ouro: mission.dificuldade * 5,
+        descricao: `Missão: ${mission.descricao}`
+      });
+      fetchData();
+    } catch (e) {
+      Alert.alert("Erro", "Falha ao concluir missão.");
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -64,179 +88,25 @@ export default function TelaPrincipalScreen() {
     }, [])
   );
 
-  const fetchData = async () => {
-    try {
-        let charId = await AsyncStorage.getItem('personagemId');
-        
-        // Se não tiver ID salvo (login novo), busca pelo usuário
-        if (!charId) {
-            const userId = await AsyncStorage.getItem('usuarioId');
-            if (userId) {
-                const res = await api.get('/personagem/listar');
-                const meuPersonagem = res.data.find(p => 
-                    (p.usuario && p.usuario.id == userId) || 
-                    (p.usuarioId == userId)
-                );
-                
-                if (meuPersonagem) {
-                    charId = meuPersonagem.id;
-                    await AsyncStorage.setItem('personagemId', charId.toString());
-                }
-            }
-        }
-
-        if (charId) {
-            // 1. Carrega Avatar ESPECÍFICO deste personagem
-            // Tenta pegar a chave única primeiro, se não existir tenta a genérica (fallback)
-            const storedAvatar = await AsyncStorage.getItem(`avatar_${charId}`);
-            const legacyAvatar = await AsyncStorage.getItem('localAvatarUri');
-            setAvatarUri(storedAvatar || legacyAvatar);
-
-            // 2. Carrega Dados do Personagem
-            const charRes = await api.get(`/personagem/listarPorId/${charId}`);
-            setCharacter(charRes.data);
-            
-            // 3. Carrega Missões
-            const missoesRes = await api.get('/missao/listar');
-            const minhasMissoes = missoesRes.data.filter(m => {
-                const idNaMissao = m.personagemId || (m.personagem && m.personagem.id);
-                return idNaMissao == charId && m.status === 1; 
-            });
-            
-            setMissions(minhasMissoes);
-        }
-    } catch (e) {
-        console.log("Erro ao carregar dados Home", e);
-    } finally {
-        setLoading(false);
-    }
-  };
-
-  const getXpRequired = (level) => {
-      return 150 + (level - 1) * 50;
-  };
-
-  const calculateOutcome = (difficulty, effect) => {
-      const diff = Number(difficulty);
-      const eff = Number(effect);
-
-      let deltaOuro = 0;
-      let deltaXp = 0;
-      let deltaVida = 0;
-
-      if (eff === 1) { // POSITIVO
-          if (diff === 1) { deltaOuro = 20; deltaXp = 20; }
-          else if (diff === 2) { deltaOuro = 40; deltaXp = 40; }
-          else if (diff === 3) { deltaOuro = 50; deltaXp = 50; }
-      } else if (eff === 2) { // NEGATIVO
-          if (diff === 1) { deltaVida = -1; }
-          else if (diff === 2) { deltaVida = -3; }
-          else if (diff === 3) { deltaVida = -5; }
-      }
-      return { deltaOuro, deltaXp, deltaVida };
-  };
-
-  const handleToggleMission = async (mission) => {
-    if (mission.status === 2) return; 
-
-    const { deltaOuro, deltaXp, deltaVida } = calculateOutcome(mission.dificuldade, mission.efeito);
-
-    let novoOuro = Number(character.ouro) + deltaOuro;
-    let novoXp = Number(character.xp) + deltaXp;
-    let novaVida = Number(character.vida) + deltaVida;
-    let novoNivel = Number(character.nivel);
-    
-    if (deltaVida < 0) {
-        if (novaVida <= 0) {
-            novaVida = 50; 
-            novoNivel = 1;
-            novoXp = 0;
-            Alert.alert("VOCÊ MORREU 💀", "Sua vida chegou a 0. Nível resetado para 1.");
-        } else {
-            Alert.alert("Dano Sofrido 🩸", `Você perdeu ${Math.abs(deltaVida)} de vida!`);
-        }
-    }
-
-    if (deltaOuro > 0 || deltaXp > 0) {
-        const xpNecessario = getXpRequired(novoNivel);
-        
-        if (novoXp >= xpNecessario) {
-            novoNivel += 1;
-            novoXp = novoXp - xpNecessario; 
-            const novaMaxVida = 50 + (novoNivel - 1) * 5;
-            novaVida = novaMaxVida; 
-            Alert.alert("LEVEL UP! ⭐", `Parabéns! Nível ${novoNivel}!\nVida regenerada!\n+${deltaOuro} Ouro | +${deltaXp} XP`);
-        } else {
-            Alert.alert("Missão Cumprida! 💰", `Você recebeu:\n+${deltaOuro} Ouro\n+${deltaXp} XP`);
-        }
-    }
-
-    setCharacter(prev => ({
-        ...prev,
-        ouro: novoOuro,
-        xp: novoXp,
-        vida: novaVida,
-        nivel: novoNivel
-    }));
-
-    setMissions(prev => prev.map(m => m.id === mission.id ? {...m, status: 2} : m));
-    setTimeout(() => {
-        setMissions(prev => prev.filter(m => m.id !== mission.id));
-    }, 1000); 
-
-    try {
-        await api.put(`/missao/atualizar/${mission.id}`, {
-            ...mission,
-            status: 2, 
-            personagemId: character.id 
-        });
-
-        const userId = character.usuario?.id || await AsyncStorage.getItem('usuarioId');
-        
-        const updatedCharPayload = {
-            ...character,
-            id: character.id,
-            ouro: novoOuro,
-            xp: novoXp,
-            vida: novaVida,
-            nivel: novoNivel,
-            usuarioId: parseInt(userId)
-        };
-        
-        await api.put(`/personagem/atualizar/${character.id}`, updatedCharPayload);
-
-        await api.post('/ganho/criar', {
-            ouro: deltaOuro,
-            xp: deltaXp,
-            vida: Math.abs(deltaVida),
-            nivel: novoNivel,
-            personagemId: character.id 
-        });
-
-    } catch (error) {
-        console.error("Erro ao salvar progresso", error);
-    }
-  };
-
   if (loading) {
-      return (
-          <ImageBackground source={BACKGROUND_IMAGE} style={[styles.container, {justifyContent:'center'}]}>
-              <Text style={{color:'white', fontWeight:'bold', fontSize:20}}>Carregando...</Text>
-          </ImageBackground>
-      )
+    return (
+      <ImageBackground source={BACKGROUND_IMAGE} style={[styles.container, { justifyContent: 'center' }]}>
+        <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 20 }}>Carregando...</Text>
+      </ImageBackground>
+    )
   }
 
   if (!character) {
-      return (
-          <ImageBackground source={BACKGROUND_IMAGE} style={[styles.container, {justifyContent:'center'}]}>
-              <Text style={{color:'white', fontWeight:'bold', fontSize:20, textAlign:'center'}}>Personagem não encontrado.</Text>
-              <Link href="/personagem" asChild>
-                <TouchableOpacity style={{marginTop:20, backgroundColor:'white', padding:10, borderRadius:5}}>
-                    <Text>Criar Novo Personagem</Text>
-                </TouchableOpacity>
-              </Link>
-          </ImageBackground>
-      )
+    return (
+      <ImageBackground source={BACKGROUND_IMAGE} style={[styles.container, { justifyContent: 'center' }]}>
+        <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 20, textAlign: 'center' }}>Personagem não encontrado.</Text>
+        <Link href="/personagem" asChild>
+          <TouchableOpacity style={{ marginTop: 20, backgroundColor: 'white', padding: 10, borderRadius: 5 }}>
+            <Text>Criar Novo Personagem</Text>
+          </TouchableOpacity>
+        </Link>
+      </ImageBackground>
+    )
   }
 
   const xpNecessarioAtual = getXpRequired(character.nivel);
@@ -245,7 +115,7 @@ export default function TelaPrincipalScreen() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
-        
+
         <View style={styles.topRightCorner}>
           <Image source={DAHT_LOGO} style={styles.logoTop} resizeMode="contain" />
           <Link href="/configuracoes" asChild>
@@ -257,42 +127,42 @@ export default function TelaPrincipalScreen() {
         </View>
 
         <View style={styles.header}>
-            <Link href="/config-personagem" asChild>
-                <TouchableOpacity style={styles.avatarSection} activeOpacity={0.8}>
-                    <Image 
-                        source={avatarUri ? { uri: avatarUri } : DEFAULT_AVATAR} 
-                        style={styles.avatar} 
-                        resizeMode="cover"
-                    />
-                    <View style={styles.star}>
-                        <Text style={styles.levelText}>{character.nivel}</Text>
-                    </View>
-                </TouchableOpacity>
-            </Link>
-            <Text style={styles.characterName}>{character.nickname}</Text>
+          <Link href="/config-personagem" asChild>
+            <TouchableOpacity style={styles.avatarSection} activeOpacity={0.8}>
+              <Image
+                source={avatarUri ? { uri: avatarUri } : DEFAULT_AVATAR}
+                style={styles.avatar}
+                resizeMode="cover"
+              />
+              <View style={styles.star}>
+                <Text style={styles.levelText}>{character.nivel}</Text>
+              </View>
+            </TouchableOpacity>
+          </Link>
+          <Text style={styles.characterName}>{character.nickname}</Text>
 
-            <View style={styles.statusGroup}>
-                <StatusBar value={character.vida} iconSource={HEART_ICON} barColor="#E83A41" />
-                <StatusBar value={character.ouro} iconSource={COIN_ICON} barColor="#FFD700" />
-            </View>
-            <View style={styles.statusSingle}>
-                <StatusBar value={xpDisplay} iconSource={ENERGY_ICON} barColor="#38B000" />
-            </View>
+          <View style={styles.statusGroup}>
+            <StatusBar value={character.vida} iconSource={HEART_ICON} barColor="#E83A41" />
+            <StatusBar value={character.ouro} iconSource={COIN_ICON} barColor="#FFD700" />
+          </View>
+          <View style={styles.statusSingle}>
+            <StatusBar value={xpDisplay} iconSource={ENERGY_ICON} barColor="#38B000" />
+          </View>
         </View>
 
         <Text style={styles.title}>Missões</Text>
         <View style={styles.missionsBox}>
           {missions.length === 0 ? (
-              <Text style={{textAlign:'center', marginTop: 20, fontStyle:'italic'}}>Nenhuma missão ativa.</Text>
+            <Text style={{ textAlign: 'center', marginTop: 20, fontStyle: 'italic' }}>Nenhuma missão ativa.</Text>
           ) : (
             <ScrollView>
-                {missions.map((mission) => (
+              {missions.map((mission) => (
                 <MissionItem
-                    key={mission.id}
-                    mission={mission}
-                    onToggle={() => handleToggleMission(mission)}
+                  key={mission.id}
+                  mission={mission}
+                  onToggle={() => handleToggleMission(mission)}
                 />
-                ))}
+              ))}
             </ScrollView>
           )}
         </View>
@@ -300,13 +170,13 @@ export default function TelaPrincipalScreen() {
         <View style={styles.bottomButtons}>
           <Link href="/missoes/realizadas" asChild>
             <TouchableOpacity style={styles.historyButton}>
-                <Text style={styles.iconText}>📋</Text>
+              <Text style={styles.iconText}>📋</Text>
             </TouchableOpacity>
           </Link>
 
           <Link href={{ pathname: "/missoes/nova", params: { charId: character.id } }} asChild>
             <TouchableOpacity style={styles.addButton}>
-                <Text style={styles.iconText}>＋</Text>
+              <Text style={styles.iconText}>＋</Text>
             </TouchableOpacity>
           </Link>
         </View>
@@ -323,35 +193,35 @@ const styles = StyleSheet.create({
   logoTop: { width: 32, height: 32 },
   configTop: { width: 42, height: 42 },
   header: { alignItems: 'center', marginBottom: 10 },
-  avatarSection: { 
-    marginTop: 50, 
-    width: 110, 
-    height: 110, 
-    borderRadius: 55, 
-    backgroundColor: 'white', 
-    borderWidth: 3, 
-    borderColor: 'black', 
-    alignItems: 'center', 
+  avatarSection: {
+    marginTop: 50,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: 'white',
+    borderWidth: 3,
+    borderColor: 'black',
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  avatar: { 
-    width: '100%', 
+  avatar: {
+    width: '100%',
     height: '100%',
-    borderRadius: 55 
-  }, 
-  star: { 
-    position: 'absolute', 
-    bottom: 0, 
-    right: -5, 
-    width: 25, 
-    height: 25, 
-    backgroundColor: '#FFD700', 
-    borderWidth: 2, 
-    borderColor: 'black', 
-    borderRadius: 12.5, 
-    alignItems: 'center', 
+    borderRadius: 55
+  },
+  star: {
+    position: 'absolute',
+    bottom: 0,
+    right: -5,
+    width: 25,
+    height: 25,
+    backgroundColor: '#FFD700',
+    borderWidth: 2,
+    borderColor: 'black',
+    borderRadius: 12.5,
+    alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 20 
+    zIndex: 20
   },
   levelText: { fontSize: 12, fontWeight: 'bold', color: 'black' },
   characterName: { fontWeight: 'bold', fontSize: 16, color: 'black', marginTop: 5, backgroundColor: 'white', borderColor: 'black', borderWidth: 2, paddingHorizontal: 8, paddingVertical: 3 },

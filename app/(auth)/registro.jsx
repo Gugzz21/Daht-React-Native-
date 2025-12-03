@@ -1,20 +1,21 @@
+// Registro Screen
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    Alert,
-    Dimensions,
-    ImageBackground,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  ImageBackground,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import DahtLogo from '../../components/DahtLogo';
-import api from '../../services/api';
+import usuarioService from '../../services/usuarioService';
 
 const BACKGROUND_IMAGE = require('../../assets/fundo-site.png');
 const DAHT_LOGO = require('../../assets/daht-logo.png');
@@ -22,12 +23,18 @@ const { width } = Dimensions.get('window');
 // Slightly increased logo size for better visibility on modern devices
 const LOGO_SIZE = Math.min(180, width * 0.48);
 
+const inputStyles = StyleSheet.create({
+  group: { width: '100%', marginBottom: 15 },
+  label: { color: 'white', fontSize: 16, marginBottom: 5 },
+  input: { width: '100%', height: 35, borderBottomWidth: 1, borderBottomColor: 'white', color: 'white', fontSize: 18, padding: 0 },
+});
+
 const FormInput = ({ label, value, onChangeText, secureTextEntry, keyboardType, maxLength, placeholder }) => (
   <View style={inputStyles.group}>
     <Text style={inputStyles.label}>{label}:</Text>
-    <TextInput 
-      style={inputStyles.input} 
-      secureTextEntry={secureTextEntry} 
+    <TextInput
+      style={inputStyles.input}
+      secureTextEntry={secureTextEntry}
       value={value}
       onChangeText={onChangeText}
       autoCapitalize="none"
@@ -41,7 +48,7 @@ const FormInput = ({ label, value, onChangeText, secureTextEntry, keyboardType, 
 
 export default function RegistroScreen() {
   const router = useRouter();
-  
+
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
@@ -72,13 +79,13 @@ export default function RegistroScreen() {
     const [day, month, year] = dateString.split('/').map(Number);
     const birthDate = new Date(year, month - 1, day);
     const today = new Date();
-    
+
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
-    
+
     // Ajusta a idade se o aniversário ainda não aconteceu este ano
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
+      age--;
     }
 
     return age >= 8;
@@ -90,16 +97,16 @@ export default function RegistroScreen() {
     if (!regex.test(dateString)) return false;
     const [d, m, y] = dateString.split('/').map(Number);
     const currentYear = new Date().getFullYear();
-    
+
     // Ano válido (entre 1900 e hoje)
     if (y < 1900 || y > currentYear) return false;
     // Mês válido
     if (m === 0 || m > 12) return false;
-    
+
     // Dias válidos por mês
     const monthLength = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     if (y % 400 === 0 || (y % 100 !== 0 && y % 4 === 0)) monthLength[1] = 29; // Bissexto
-    
+
     return d > 0 && d <= monthLength[m - 1];
   };
 
@@ -124,14 +131,14 @@ export default function RegistroScreen() {
 
     // 2. Validação de Email
     if (!isValidEmail(email)) {
-        Alert.alert('Email Inválido', 'Por favor, insira um endereço de email válido.');
-        return;
+      Alert.alert('Email Inválido', 'Por favor, insira um endereço de email válido.');
+      return;
     }
 
     // 3. Validação de Senha (>= 4 caracteres)
     if (senha.length < 4) {
-        Alert.alert('Senha Fraca', 'A senha deve ter pelo menos 4 caracteres.');
-        return;
+      Alert.alert('Senha Fraca', 'A senha deve ter pelo menos 4 caracteres.');
+      return;
     }
 
     if (senha !== confirmarSenha) {
@@ -146,46 +153,32 @@ export default function RegistroScreen() {
     }
 
     if (!isOldEnough(dataNascimento)) {
-        Alert.alert('Restrição de Idade', 'Você precisa ter pelo menos 8 anos para se registrar.');
-        return;
+      Alert.alert('Restrição de Idade', 'Você precisa ter pelo menos 8 anos para se registrar.');
+      return;
     }
 
     try {
-      // Criação do Payload
       const payload = {
         nome,
         email,
         senha,
-        telefone,
-        dataNascimento: convertDateToApi(dataNascimento),
-        status: 1,
-        roles: ["ROLE_USER"]
       };
 
-      const response = await api.post('/usuario/criar', payload);
-      
-      if (response.status === 201 || response.status === 200) {
-        
-        // Auto-Login
-        try {
-            const loginRes = await api.post('/usuario/login', { email, password: senha });
-            const token = loginRes.data.token; 
-            
-            if (token) {
-                await AsyncStorage.setItem('token', token);
-                await AsyncStorage.setItem('usuarioId', response.data.id.toString());
-            }
-        } catch (loginError) {
-            console.log("Erro no auto-login", loginError);
-        }
+      await usuarioService.criar(payload);
 
-        Alert.alert('Sucesso', 'Conta criada! Vamos criar seu personagem.');
-        router.replace({ pathname: '/personagem', params: { userId: response.data.id } });
+      // Auto-login após registro
+      const loginRes = await usuarioService.login({ email, password: senha });
+      if (loginRes.data && loginRes.data.id) {
+        await AsyncStorage.setItem('usuarioId', loginRes.data.id.toString());
+        router.replace('/home');
+      } else {
+        Alert.alert('Sucesso', 'Conta criada! Faça login.');
+        router.replace('/(auth)/login');
       }
 
     } catch (error) {
       console.error("Erro Registro:", error);
-      Alert.alert('Erro', 'Falha ao registrar. Verifique se o email já está em uso.');
+      Alert.alert('Erro', 'Falha ao registrar usuário.');
     }
   };
 
@@ -197,28 +190,28 @@ export default function RegistroScreen() {
 
           <View style={styles.formContainer}>
             <FormInput label="Nome" value={nome} onChangeText={setNome} />
-            
-            <FormInput 
-                label="Email" 
-                value={email} 
-                onChangeText={setEmail} 
-                keyboardType="email-address" 
-                placeholder="exemplo@email.com"
+
+            <FormInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              placeholder="exemplo@email.com"
             />
-            
-            <FormInput 
-                label="Telefone (Apenas números)" 
-                value={telefone} 
-                onChangeText={handlePhoneChange} 
-                keyboardType="numeric" 
-                placeholder="11999999999"
-                maxLength={11}
+
+            <FormInput
+              label="Telefone (Apenas números)"
+              value={telefone}
+              onChangeText={handlePhoneChange}
+              keyboardType="numeric"
+              placeholder="11999999999"
+              maxLength={11}
             />
-            
-            <FormInput 
-              label="Data de Nascimento" 
-              value={dataNascimento} 
-              onChangeText={handleDateChange} 
+
+            <FormInput
+              label="Data de Nascimento"
+              value={dataNascimento}
+              onChangeText={handleDateChange}
               keyboardType="numeric"
               maxLength={10}
               placeholder="DD/MM/AAAA"
@@ -230,7 +223,7 @@ export default function RegistroScreen() {
             <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
               <Text style={styles.buttonText}>Registrar</Text>
             </TouchableOpacity>
-            
+
             <Link href="/(auth)/login" asChild>
               <TouchableOpacity style={styles.backLinkContainer}>
                 <Text style={styles.backLinkText}>Voltar para o Login</Text>
@@ -242,12 +235,6 @@ export default function RegistroScreen() {
     </SafeAreaView>
   );
 }
-
-const inputStyles = StyleSheet.create({
-  group: { width: '100%', marginBottom: 15 },
-  label: { color: 'white', fontSize: 16, marginBottom: 5 },
-  input: { width: '100%', height: 35, borderBottomWidth: 1, borderBottomColor: 'white', color: 'white', fontSize: 18, padding: 0 },
-});
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
