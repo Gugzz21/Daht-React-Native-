@@ -58,7 +58,7 @@ export default function EditarMissao() {
 
   const fetchMission = async () => {
       try {
-          const res = await api.get(`/missao/listarPorId/${id}`);
+          const res = await api.get(`/api/missao/listarPorId/${id}`);
           const m = res.data;
           setMission(m);
           setDescricao(m.descricao);
@@ -110,7 +110,7 @@ export default function EditarMissao() {
               personagemId: mission.personagemId || (mission.personagem ? mission.personagem.id : null)
           };
 
-          await api.put(`/missao/atualizar/${id}`, payload);
+          await api.put(`/api/missao/atualizar/${id}`, payload);
           Alert.alert("Sucesso", "Missão atualizada!");
           router.back();
       } catch (e) {
@@ -122,7 +122,7 @@ export default function EditarMissao() {
   // --- Lógica de Deletar Compatível com Web e Mobile ---
   const performDelete = async () => {
       try {
-          await api.delete(`/missao/deletar/${id}`);
+          await api.delete(`/api/missao/deletar/${id}`);
           if (Platform.OS === 'web') {
               alert("Missão removida com sucesso.");
           } else {

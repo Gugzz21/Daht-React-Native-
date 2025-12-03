@@ -162,13 +162,13 @@ export default function RegistroScreen() {
         roles: ["ROLE_USER"]
       };
 
-      const response = await api.post('/usuario/criar', payload);
+      const response = await api.post('/api/usuario/criar', payload);
       
       if (response.status === 201 || response.status === 200) {
         
         // Auto-Login
         try {
-            const loginRes = await api.post('/usuario/login', { email, password: senha });
+            const loginRes = await api.post('/api/usuario/login', { email, password: senha });
             const token = loginRes.data.token; 
             
             if (token) {

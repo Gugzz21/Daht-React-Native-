@@ -105,7 +105,7 @@ export default function NovaMissao() {
             personagemId: parseInt(charId) 
         };
 
-        await api.post('/missao/criar', payload);
+        await api.post('/api/missao/criar', payload);
         Alert.alert("Sucesso", "Missão criada!");
         router.back();
 

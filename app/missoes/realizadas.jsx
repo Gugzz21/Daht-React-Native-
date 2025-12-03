@@ -39,7 +39,7 @@ export default function MissoesRealizadasScreen() {
     try {
         const charId = await AsyncStorage.getItem('personagemId');
         if (charId) {
-            const missoesRes = await api.get('/missao/listar');
+            const missoesRes = await api.get('/api/missao/listar');
             // Filtra STATUS 2 (Concluídas)
             const realizadas = missoesRes.data.filter(m => {
                 const idNaMissao = m.personagemId || (m.personagem && m.personagem.id);
@@ -60,7 +60,7 @@ export default function MissoesRealizadasScreen() {
           { text: "Não", style: "cancel" },
           { text: "Sim", onPress: async () => {
               try {
-                  await api.put(`/missao/atualizar/${mission.id}`, {
+                  await api.put(`/api/missao/atualizar/${mission.id}`, {
                       ...mission,
                       status: 1, // Volta para Ativa
                       personagemId: mission.personagemId || (mission.personagem && mission.personagem.id)

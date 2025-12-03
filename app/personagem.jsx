@@ -67,7 +67,7 @@ export default function CriacaoPersonagemScreen() {
         usuarioId: userId 
       };
 
-      const response = await api.post('/personagem/criar', payload);
+      const response = await api.post('/api/personagem/criar', payload);
 
       if (response.status === 201 || response.status === 200) {
         const charId = response.data.id.toString();

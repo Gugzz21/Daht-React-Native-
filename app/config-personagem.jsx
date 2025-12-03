@@ -55,7 +55,7 @@ export default function ConfigPersonagemScreen() {
         const storedAvatar = await AsyncStorage.getItem(`avatar_${charId}`);
         if (storedAvatar) setAvatarUri(storedAvatar);
 
-        const response = await api.get(`/personagem/listarPorId/${charId}`);
+        const response = await api.get(`/api/personagem/listarPorId/${charId}`);
         const charData = response.data;
         setCharacter(charData);
         setNewNickname(charData.nickname); 
@@ -99,7 +99,7 @@ export default function ConfigPersonagemScreen() {
         usuarioId: character.usuario ? character.usuario.id : await AsyncStorage.getItem('usuarioId')
       };
 
-      await api.put(`/personagem/atualizar/${character.id}`, payload);
+      await api.put(`/api/personagem/atualizar/${character.id}`, payload);
 
       Alert.alert('Sucesso', 'Personagem atualizado!');
       router.replace('/home'); 

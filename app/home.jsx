@@ -72,7 +72,7 @@ export default function TelaPrincipalScreen() {
         if (!charId) {
             const userId = await AsyncStorage.getItem('usuarioId');
             if (userId) {
-                const res = await api.get('/personagem/listar');
+                const res = await api.get('/api/personagem/listar');
                 const meuPersonagem = res.data.find(p => 
                     (p.usuario && p.usuario.id == userId) || 
                     (p.usuarioId == userId)
@@ -93,11 +93,11 @@ export default function TelaPrincipalScreen() {
             setAvatarUri(storedAvatar || legacyAvatar);
 
             // 2. Carrega Dados do Personagem
-            const charRes = await api.get(`/personagem/listarPorId/${charId}`);
+            const charRes = await api.get(`/api/personagem/listarPorId/${charId}`);
             setCharacter(charRes.data);
             
             // 3. Carrega Missões
-            const missoesRes = await api.get('/missao/listar');
+            const missoesRes = await api.get('/api/missao/listar');
             const minhasMissoes = missoesRes.data.filter(m => {
                 const idNaMissao = m.personagemId || (m.personagem && m.personagem.id);
                 return idNaMissao == charId && m.status === 1; 
@@ -185,7 +185,7 @@ export default function TelaPrincipalScreen() {
     }, 1000); 
 
     try {
-        await api.put(`/missao/atualizar/${mission.id}`, {
+        await api.put(`/api/missao/atualizar/${mission.id}`, {
             ...mission,
             status: 2, 
             personagemId: character.id 
@@ -203,9 +203,9 @@ export default function TelaPrincipalScreen() {
             usuarioId: parseInt(userId)
         };
         
-        await api.put(`/personagem/atualizar/${character.id}`, updatedCharPayload);
+        await api.put(`/api/personagem/atualizar/${character.id}`, updatedCharPayload);
 
-        await api.post('/ganho/criar', {
+        await api.post('/api/ganho/criar', {
             ouro: deltaOuro,
             xp: deltaXp,
             vida: Math.abs(deltaVida),

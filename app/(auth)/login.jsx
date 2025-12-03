@@ -19,7 +19,7 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       const loginPayload = { email: email, password: password }; 
-      const response = await api.post('/usuario/login', loginPayload);
+      const response = await api.post('/api/usuario/login', loginPayload);
 
       if (response.status === 200) {
         const { token } = response.data;
