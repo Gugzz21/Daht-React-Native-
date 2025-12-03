@@ -3,15 +3,15 @@ import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import {
-    Alert,
-    Image,
-    ImageBackground,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Image,
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import api from '../services/api';
 
@@ -22,7 +22,6 @@ const ICON_XP = require('../assets/energy-icon.png');
 const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
 const DAHT_LOGO = require('../assets/daht-logo.png');
 const SETTINGS_ICON = require('../assets/configuracao-icon.png');
-const DEFAULT_AVATAR = require('../assets/default-avatar.png');
 
 const StatusBar = ({ value, iconSource, barColor }) => (
   <View style={statusStyles.barContainer}>
@@ -49,7 +48,7 @@ export default function ConfigPersonagemScreen() {
   const fetchData = async () => {
     try {
       const charId = await AsyncStorage.getItem('personagemId');
-      
+
       if (charId) {
         // Carrega avatar específico
         const storedAvatar = await AsyncStorage.getItem(`avatar_${charId}`);
@@ -58,7 +57,7 @@ export default function ConfigPersonagemScreen() {
         const response = await api.get(`/api/personagem/listarPorId/${charId}`);
         const charData = response.data;
         setCharacter(charData);
-        setNewNickname(charData.nickname); 
+        setNewNickname(charData.nickname);
       } else {
         Alert.alert("Erro", "Personagem não encontrado.");
         router.back();
@@ -94,15 +93,15 @@ export default function ConfigPersonagemScreen() {
       }
 
       const payload = {
-        ...character, 
-        nickname: newNickname, 
+        ...character,
+        nickname: newNickname,
         usuarioId: character.usuario ? character.usuario.id : await AsyncStorage.getItem('usuarioId')
       };
 
       await api.put(`/api/personagem/atualizar/${character.id}`, payload);
 
       Alert.alert('Sucesso', 'Personagem atualizado!');
-      router.replace('/home'); 
+      router.replace('/home');
 
     } catch (error) {
       console.error("Erro ao atualizar", error);
@@ -121,7 +120,7 @@ export default function ConfigPersonagemScreen() {
   return (
     <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        
+
         <View style={styles.topRightCorner}>
           <Image source={DAHT_LOGO} style={styles.logoTop} resizeMode="contain" />
           <TouchableOpacity onPress={() => router.push('/configuracoes')}>
@@ -131,11 +130,17 @@ export default function ConfigPersonagemScreen() {
 
         <View style={styles.header}>
           <TouchableOpacity onPress={pickImage} style={styles.avatarWrapper}>
-             <Image 
-                source={avatarUri ? { uri: avatarUri } : DEFAULT_AVATAR} 
-                style={styles.avatar} 
-                resizeMode="cover" 
-             />
+            {avatarUri ? (
+              <Image
+                source={{ uri: avatarUri }}
+                style={styles.avatar}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={[styles.avatar, { backgroundColor: '#E0E0E0', justifyContent: 'center', alignItems: 'center' }]}>
+                <Text style={{ color: '#555', fontWeight: 'bold' }}>Foto</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           <View style={styles.levelBadge}>
@@ -165,9 +170,9 @@ export default function ConfigPersonagemScreen() {
 
           <Text style={styles.label}>Alterar foto de Perfil:</Text>
           <Text style={styles.uploadLabel}>Toque na imagem acima ou no botão.</Text>
-          
+
           <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-             <Text style={styles.uploadButtonText}>Selecionar Imagem</Text>
+            <Text style={styles.uploadButtonText}>Selecionar Imagem</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
@@ -193,7 +198,7 @@ const styles = StyleSheet.create({
   logoTop: { width: 40, height: 40, marginBottom: 5 },
   configTop: { width: 28, height: 28 },
   header: { width: '100%', alignItems: 'center', marginBottom: 40 },
-  avatarWrapper: { width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: 'black', backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' },
+  avatarWrapper: { width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: 'black', backgroundColor: 'white', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
   avatar: { width: '100%', height: '100%', borderRadius: 60 },
   levelBadge: { position: 'absolute', top: 105, right: '38%', backgroundColor: '#FFD700', borderRadius: 12.5, width: 25, height: 25, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'black', zIndex: 20 },
   levelText: { fontSize: 12, fontWeight: 'bold', color: 'black' },

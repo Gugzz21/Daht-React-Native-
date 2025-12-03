@@ -7,28 +7,27 @@ import api from '../services/api';
 
 const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
 const DAHT_LOGO = require('../assets/daht-logo.png');
-const DEFAULT_AVATAR = require('../assets/default-avatar.png'); 
 
 export default function CriacaoPersonagemScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams(); 
+  const params = useLocalSearchParams();
   const [nickname, setNickname] = useState('');
   const [imageUri, setImageUri] = useState(null);
   const [userId, setUserId] = useState(null);
 
   useEffect(() => {
     const loadId = async () => {
-        if (params.userId) {
-            setUserId(parseInt(params.userId, 10));
-            return;
-        }
-        const storedId = await AsyncStorage.getItem('usuarioId');
-        if (storedId) {
-            setUserId(parseInt(storedId, 10));
-        } else {
-            Alert.alert("Erro", "Usuário não identificado. Faça login novamente.");
-            router.replace('/(auth)/login');
-        }
+      if (params.userId) {
+        setUserId(parseInt(params.userId, 10));
+        return;
+      }
+      const storedId = await AsyncStorage.getItem('usuarioId');
+      if (storedId) {
+        setUserId(parseInt(storedId, 10));
+      } else {
+        Alert.alert("Erro", "Usuário não identificado. Faça login novamente.");
+        router.replace('/(auth)/login');
+      }
     };
     loadId();
   }, [params.userId]);
@@ -52,8 +51,8 @@ export default function CriacaoPersonagemScreen() {
     }
 
     if (!userId) {
-        Alert.alert("Erro", "ID do usuário inválido.");
-        return;
+      Alert.alert("Erro", "ID do usuário inválido.");
+      return;
     }
 
     try {
@@ -64,7 +63,7 @@ export default function CriacaoPersonagemScreen() {
         xp: 0.0,
         nivel: 1,
         status: 1,
-        usuarioId: userId 
+        usuarioId: userId
       };
 
       const response = await api.post('/api/personagem/criar', payload);
@@ -72,12 +71,12 @@ export default function CriacaoPersonagemScreen() {
       if (response.status === 201 || response.status === 200) {
         const charId = response.data.id.toString();
         await AsyncStorage.setItem('personagemId', charId);
-        
+
         // SALVA COM CHAVE ÚNICA BASEADA NO ID
-        if(imageUri) await AsyncStorage.setItem(`avatar_${charId}`, imageUri);
+        if (imageUri) await AsyncStorage.setItem(`avatar_${charId}`, imageUri);
 
         Alert.alert('Sucesso', 'Personagem criado!');
-        router.replace('/home'); 
+        router.replace('/home');
       }
     } catch (error) {
       console.error("Erro Criação Personagem:", error);
@@ -91,28 +90,31 @@ export default function CriacaoPersonagemScreen() {
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <Image source={DAHT_LOGO} style={styles.dahtLogo} resizeMode="contain" />
           <Text style={styles.title}>Crie seu Avatar</Text>
-          
+
           <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
             {imageUri ? (
               <Image source={{ uri: imageUri }} style={styles.avatarImage} />
             ) : (
-              <Image source={DEFAULT_AVATAR} style={styles.avatarImage} resizeMode="contain" />
+              // Círculo vazio com ícone de câmera
+              <View style={[styles.avatarImage, { backgroundColor: '#ccc', justifyContent: 'center', alignItems: 'center' }]}>
+                <Text style={{ fontSize: 50 }}>📷</Text>
+              </View>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-             <Text style={styles.uploadButtonText}>Selecionar Imagem</Text>
+            <Text style={styles.uploadButtonText}>Selecionar Imagem</Text>
           </TouchableOpacity>
 
           <View style={styles.formContainer}>
-              <Text style={styles.label}>Apelido (Nickname):</Text>
-              <TextInput
-                style={styles.input}
-                value={nickname}
-                onChangeText={setNickname}
-                placeholder="Ex: GuerreiroDaht"
-                placeholderTextColor="#DDD"
-              />
+            <Text style={styles.label}>Apelido (Nickname):</Text>
+            <TextInput
+              style={styles.input}
+              value={nickname}
+              onChangeText={setNickname}
+              placeholder="Ex: GuerreiroDaht"
+              placeholderTextColor="#DDD"
+            />
           </View>
 
           <TouchableOpacity style={styles.createButton} onPress={handleCreate}>
@@ -130,7 +132,7 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1, alignItems: 'center', paddingTop: 50, paddingHorizontal: 20 },
   dahtLogo: { position: 'absolute', top: 10, right: 10, width: 40, height: 40 },
   title: { fontSize: 28, fontWeight: 'bold', color: '#FFF', marginBottom: 20, marginTop: 40 },
-  avatarContainer: { width: 150, height: 150, borderRadius: 75, backgroundColor: 'lightgray', borderWidth: 5, borderColor: '#FFF', justifyContent: 'center', alignItems: 'center', marginBottom: 15 },
+  avatarContainer: { width: 150, height: 150, borderRadius: 75, backgroundColor: 'lightgray', borderWidth: 5, borderColor: '#FFF', justifyContent: 'center', alignItems: 'center', marginBottom: 15, overflow: 'hidden' },
   avatarImage: { width: '100%', height: '100%', borderRadius: 70 },
   uploadButton: { backgroundColor: '#E0E0E0', paddingVertical: 10, paddingHorizontal: 20, borderRadius: 5, borderWidth: 2, borderColor: 'black', marginBottom: 20 },
   uploadButtonText: { color: 'black', fontWeight: 'bold', fontSize: 16 },
