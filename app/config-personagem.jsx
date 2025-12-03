@@ -14,7 +14,7 @@ import {
   View,
 } from 'react-native';
 import api from '../services/api';
-// CORREÇÃO AQUI: Importar o novo componente CharacterAvatar
+// Importação corrigida do componente visual
 import CharacterAvatar from '../components/CharacterAvatar';
 
 // Assets
@@ -156,7 +156,7 @@ export default function ConfigPersonagemScreen() {
 
         <View style={styles.header}>
           <TouchableOpacity onPress={pickImage} style={styles.avatarWrapper}>
-            {/* CORREÇÃO AQUI: Usando CharacterAvatar em vez de AvatarWithFrame */}
+            {/* Componente CharacterAvatar com suporte a itens visuais */}
             <CharacterAvatar
               imageUri={avatarUri}
               molduraId={character.molduraId}

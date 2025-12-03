@@ -1,5 +1,5 @@
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { ITEMS_DB } from '../constants/Items'; // Agora deve encontrar o arquivo
+import { ITEMS_DB } from '../constants/Items'; // Agora deve encontrar o arquivo corretamente
 
 export default function CharacterAvatar({ imageUri, molduraId, cabecaId, maoId, size = 120 }) {
 

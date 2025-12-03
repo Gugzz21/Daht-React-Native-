@@ -5,7 +5,6 @@ import {
   Alert,
   Dimensions,
   ImageBackground,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,13 +12,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+// CORREÇÃO: Importando SafeAreaView da biblioteca correta
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import DahtLogo from '../../components/DahtLogo';
 import api from '../../services/api';
 
 const BACKGROUND_IMAGE = require('../../assets/fundo-site.png');
-const DAHT_LOGO = require('../../assets/daht-logo.png');
 const { width } = Dimensions.get('window');
-// Slightly increased logo size for better visibility on modern devices
 const LOGO_SIZE = Math.min(180, width * 0.48);
 
 const FormInput = ({ label, value, onChangeText, secureTextEntry, keyboardType, maxLength, placeholder }) => (
@@ -49,9 +49,6 @@ export default function RegistroScreen() {
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
 
-  // --- Validações e Máscaras ---
-
-  // Máscara de Data (DD/MM/AAAA)
   const handleDateChange = (text) => {
     let cleaned = text.replace(/[^0-9]/g, '');
     if (cleaned.length > 2) cleaned = cleaned.substring(0, 2) + '/' + cleaned.substring(2);
@@ -60,50 +57,35 @@ export default function RegistroScreen() {
     setDataNascimento(cleaned);
   };
 
-  // Máscara de Telefone (Apenas Números)
   const handlePhoneChange = (text) => {
-    // Remove tudo que não for número
     const numericValue = text.replace(/[^0-9]/g, '');
     setTelefone(numericValue);
   };
 
-  // Validação de Idade (> 8 anos)
   const isOldEnough = (dateString) => {
     const [day, month, year] = dateString.split('/').map(Number);
     const birthDate = new Date(year, month - 1, day);
     const today = new Date();
-
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
-
-    // Ajusta a idade se o aniversário ainda não aconteceu este ano
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
-
     return age >= 8;
   };
 
-  // Validação de Data Geral
   const isValidDate = (dateString) => {
     const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
     if (!regex.test(dateString)) return false;
     const [d, m, y] = dateString.split('/').map(Number);
     const currentYear = new Date().getFullYear();
-
-    // Ano válido (entre 1900 e hoje)
     if (y < 1900 || y > currentYear) return false;
-    // Mês válido
     if (m === 0 || m > 12) return false;
-
-    // Dias válidos por mês
     const monthLength = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    if (y % 400 === 0 || (y % 100 !== 0 && y % 4 === 0)) monthLength[1] = 29; // Bissexto
-
+    if (y % 400 === 0 || (y % 100 !== 0 && y % 4 === 0)) monthLength[1] = 29;
     return d > 0 && d <= monthLength[m - 1];
   };
 
-  // Validação de Email (Regex simples)
   const isValidEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
@@ -113,12 +95,8 @@ export default function RegistroScreen() {
     const [day, month, year] = dateString.split('/');
     return `${year}-${month}-${day}`;
   };
-  // --------------------------------------------
 
   const handleRegister = async () => {
-
-    // 1. LIMPEZA DE SEGURANÇA (Adicionado no lugar certo!)
-    // Garante que não estamos enviando tokens velhos que causam erro 403
     try {
       await AsyncStorage.removeItem('token');
       await AsyncStorage.removeItem('usuarioId');
@@ -126,19 +104,16 @@ export default function RegistroScreen() {
       console.log("Erro ao limpar storage", e);
     }
 
-    // 2. Validação de Campos Vazios
     if (!nome || !email || !senha || !dataNascimento || !telefone) {
       Alert.alert('Atenção', 'Por favor, preencha todos os campos.');
       return;
     }
 
-    // 3. Validação de Email
     if (!isValidEmail(email)) {
       Alert.alert('Email Inválido', 'Por favor, insira um endereço de email válido.');
       return;
     }
 
-    // 4. Validação de Senha (>= 4 caracteres)
     if (senha.length < 4) {
       Alert.alert('Senha Fraca', 'A senha deve ter pelo menos 4 caracteres.');
       return;
@@ -149,7 +124,6 @@ export default function RegistroScreen() {
       return;
     }
 
-    // 5. Validação de Data e Idade
     if (!isValidDate(dataNascimento)) {
       Alert.alert('Data Inválida', 'Insira uma data válida (DD/MM/AAAA).');
       return;
@@ -161,7 +135,6 @@ export default function RegistroScreen() {
     }
 
     try {
-      // Criação do Payload
       const payload = {
         nome,
         email,
@@ -175,8 +148,6 @@ export default function RegistroScreen() {
       const response = await api.post('/api/usuario/criar', payload);
 
       if (response.status === 201 || response.status === 200) {
-
-        // Auto-Login
         try {
           const loginRes = await api.post('/api/usuario/login', { email, password: senha });
           const token = loginRes.data.token;
@@ -207,33 +178,9 @@ export default function RegistroScreen() {
 
           <View style={styles.formContainer}>
             <FormInput label="Nome" value={nome} onChangeText={setNome} />
-
-            <FormInput
-              label="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              placeholder="exemplo@email.com"
-            />
-
-            <FormInput
-              label="Telefone (Apenas números)"
-              value={telefone}
-              onChangeText={handlePhoneChange}
-              keyboardType="numeric"
-              placeholder="11999999999"
-              maxLength={11}
-            />
-
-            <FormInput
-              label="Data de Nascimento"
-              value={dataNascimento}
-              onChangeText={handleDateChange}
-              keyboardType="numeric"
-              maxLength={10}
-              placeholder="DD/MM/AAAA"
-            />
-
+            <FormInput label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" placeholder="exemplo@email.com" />
+            <FormInput label="Telefone" value={telefone} onChangeText={handlePhoneChange} keyboardType="numeric" placeholder="11999999999" maxLength={11} />
+            <FormInput label="Data de Nascimento" value={dataNascimento} onChangeText={handleDateChange} keyboardType="numeric" maxLength={10} placeholder="DD/MM/AAAA" />
             <FormInput label="Senha (Min 4 caracteres)" value={senha} onChangeText={setSenha} secureTextEntry={true} />
             <FormInput label="Confirmar Senha" value={confirmarSenha} onChangeText={setConfirmarSenha} secureTextEntry={true} />
 

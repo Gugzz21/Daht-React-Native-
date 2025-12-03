@@ -62,7 +62,7 @@ export default function PremiosScreen() {
     if (!itemVisual) {
       Alert.alert("Item sem visual", "Este item existe no banco mas não tem imagem no App. Deseja comprar mesmo assim?", [
         { text: "Cancelar", style: "cancel" },
-        { text: "Comprar", onPress: () => realizarCompra(premio, { type: ITEM_TYPE.MOLDURA }) } // Default
+        { text: "Comprar", onPress: () => realizarCompra(premio, { type: ITEM_TYPE.MOLDURA }) } // Default fallback
       ]);
       return;
     }
