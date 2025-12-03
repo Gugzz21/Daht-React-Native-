@@ -2,16 +2,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    Alert,
-    Dimensions,
-    ImageBackground,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  Dimensions,
+  ImageBackground,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import DahtLogo from '../../components/DahtLogo';
 import api from '../../services/api';
@@ -25,9 +25,9 @@ const LOGO_SIZE = Math.min(180, width * 0.48);
 const FormInput = ({ label, value, onChangeText, secureTextEntry, keyboardType, maxLength, placeholder }) => (
   <View style={inputStyles.group}>
     <Text style={inputStyles.label}>{label}:</Text>
-    <TextInput 
-      style={inputStyles.input} 
-      secureTextEntry={secureTextEntry} 
+    <TextInput
+      style={inputStyles.input}
+      secureTextEntry={secureTextEntry}
       value={value}
       onChangeText={onChangeText}
       autoCapitalize="none"
@@ -41,7 +41,7 @@ const FormInput = ({ label, value, onChangeText, secureTextEntry, keyboardType, 
 
 export default function RegistroScreen() {
   const router = useRouter();
-  
+
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
   const [telefone, setTelefone] = useState('');
@@ -72,13 +72,13 @@ export default function RegistroScreen() {
     const [day, month, year] = dateString.split('/').map(Number);
     const birthDate = new Date(year, month - 1, day);
     const today = new Date();
-    
+
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
-    
+
     // Ajusta a idade se o aniversário ainda não aconteceu este ano
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
+      age--;
     }
 
     return age >= 8;
@@ -90,16 +90,16 @@ export default function RegistroScreen() {
     if (!regex.test(dateString)) return false;
     const [d, m, y] = dateString.split('/').map(Number);
     const currentYear = new Date().getFullYear();
-    
+
     // Ano válido (entre 1900 e hoje)
     if (y < 1900 || y > currentYear) return false;
     // Mês válido
     if (m === 0 || m > 12) return false;
-    
+
     // Dias válidos por mês
     const monthLength = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     if (y % 400 === 0 || (y % 100 !== 0 && y % 4 === 0)) monthLength[1] = 29; // Bissexto
-    
+
     return d > 0 && d <= monthLength[m - 1];
   };
 
@@ -116,22 +116,32 @@ export default function RegistroScreen() {
   // --------------------------------------------
 
   const handleRegister = async () => {
-    // 1. Validação de Campos Vazios
+
+    // 1. LIMPEZA DE SEGURANÇA (Adicionado no lugar certo!)
+    // Garante que não estamos enviando tokens velhos que causam erro 403
+    try {
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('usuarioId');
+    } catch (e) {
+      console.log("Erro ao limpar storage", e);
+    }
+
+    // 2. Validação de Campos Vazios
     if (!nome || !email || !senha || !dataNascimento || !telefone) {
       Alert.alert('Atenção', 'Por favor, preencha todos os campos.');
       return;
     }
 
-    // 2. Validação de Email
+    // 3. Validação de Email
     if (!isValidEmail(email)) {
-        Alert.alert('Email Inválido', 'Por favor, insira um endereço de email válido.');
-        return;
+      Alert.alert('Email Inválido', 'Por favor, insira um endereço de email válido.');
+      return;
     }
 
-    // 3. Validação de Senha (>= 4 caracteres)
+    // 4. Validação de Senha (>= 4 caracteres)
     if (senha.length < 4) {
-        Alert.alert('Senha Fraca', 'A senha deve ter pelo menos 4 caracteres.');
-        return;
+      Alert.alert('Senha Fraca', 'A senha deve ter pelo menos 4 caracteres.');
+      return;
     }
 
     if (senha !== confirmarSenha) {
@@ -139,15 +149,15 @@ export default function RegistroScreen() {
       return;
     }
 
-    // 4. Validação de Data e Idade
+    // 5. Validação de Data e Idade
     if (!isValidDate(dataNascimento)) {
       Alert.alert('Data Inválida', 'Insira uma data válida (DD/MM/AAAA).');
       return;
     }
 
     if (!isOldEnough(dataNascimento)) {
-        Alert.alert('Restrição de Idade', 'Você precisa ter pelo menos 8 anos para se registrar.');
-        return;
+      Alert.alert('Restrição de Idade', 'Você precisa ter pelo menos 8 anos para se registrar.');
+      return;
     }
 
     try {
@@ -163,20 +173,20 @@ export default function RegistroScreen() {
       };
 
       const response = await api.post('/api/usuario/criar', payload);
-      
+
       if (response.status === 201 || response.status === 200) {
-        
+
         // Auto-Login
         try {
-            const loginRes = await api.post('/api/usuario/login', { email, password: senha });
-            const token = loginRes.data.token; 
-            
-            if (token) {
-                await AsyncStorage.setItem('token', token);
-                await AsyncStorage.setItem('usuarioId', response.data.id.toString());
-            }
+          const loginRes = await api.post('/api/usuario/login', { email, password: senha });
+          const token = loginRes.data.token;
+
+          if (token) {
+            await AsyncStorage.setItem('token', token);
+            await AsyncStorage.setItem('usuarioId', response.data.id.toString());
+          }
         } catch (loginError) {
-            console.log("Erro no auto-login", loginError);
+          console.log("Erro no auto-login", loginError);
         }
 
         Alert.alert('Sucesso', 'Conta criada! Vamos criar seu personagem.');
@@ -197,28 +207,28 @@ export default function RegistroScreen() {
 
           <View style={styles.formContainer}>
             <FormInput label="Nome" value={nome} onChangeText={setNome} />
-            
-            <FormInput 
-                label="Email" 
-                value={email} 
-                onChangeText={setEmail} 
-                keyboardType="email-address" 
-                placeholder="exemplo@email.com"
+
+            <FormInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              placeholder="exemplo@email.com"
             />
-            
-            <FormInput 
-                label="Telefone (Apenas números)" 
-                value={telefone} 
-                onChangeText={handlePhoneChange} 
-                keyboardType="numeric" 
-                placeholder="11999999999"
-                maxLength={11}
+
+            <FormInput
+              label="Telefone (Apenas números)"
+              value={telefone}
+              onChangeText={handlePhoneChange}
+              keyboardType="numeric"
+              placeholder="11999999999"
+              maxLength={11}
             />
-            
-            <FormInput 
-              label="Data de Nascimento" 
-              value={dataNascimento} 
-              onChangeText={handleDateChange} 
+
+            <FormInput
+              label="Data de Nascimento"
+              value={dataNascimento}
+              onChangeText={handleDateChange}
               keyboardType="numeric"
               maxLength={10}
               placeholder="DD/MM/AAAA"
@@ -230,7 +240,7 @@ export default function RegistroScreen() {
             <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
               <Text style={styles.buttonText}>Registrar</Text>
             </TouchableOpacity>
-            
+
             <Link href="/(auth)/login" asChild>
               <TouchableOpacity style={styles.backLinkContainer}>
                 <Text style={styles.backLinkText}>Voltar para o Login</Text>

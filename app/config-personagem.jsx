@@ -14,6 +14,8 @@ import {
   View,
 } from 'react-native';
 import api from '../services/api';
+// CORREÇÃO AQUI: Importar o novo componente CharacterAvatar
+import CharacterAvatar from '../components/CharacterAvatar';
 
 // Assets
 const ICON_HEART = require('../assets/heart-icon.png');
@@ -50,7 +52,6 @@ export default function ConfigPersonagemScreen() {
       const charId = await AsyncStorage.getItem('personagemId');
 
       if (charId) {
-        // Carrega avatar específico
         const storedAvatar = await AsyncStorage.getItem(`avatar_${charId}`);
         if (storedAvatar) setAvatarUri(storedAvatar);
 
@@ -88,14 +89,17 @@ export default function ConfigPersonagemScreen() {
 
     try {
       if (avatarUri) {
-        // SALVA COM A MESMA CHAVE ÚNICA DA CRIAÇÃO/HOME
         await AsyncStorage.setItem(`avatar_${character.id}`, avatarUri);
       }
 
       const payload = {
         ...character,
         nickname: newNickname,
-        usuarioId: character.usuario ? character.usuario.id : await AsyncStorage.getItem('usuarioId')
+        usuarioId: character.usuario ? character.usuario.id : await AsyncStorage.getItem('usuarioId'),
+        // Mantém os itens equipados ao salvar
+        molduraId: character.molduraId,
+        cabecaId: character.cabecaId,
+        maoId: character.maoId
       };
 
       await api.put(`/api/personagem/atualizar/${character.id}`, payload);
@@ -107,6 +111,28 @@ export default function ConfigPersonagemScreen() {
       console.error("Erro ao atualizar", error);
       Alert.alert('Erro', 'Falha ao salvar alterações.');
     }
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      "Sair da Conta",
+      "Tem a certeza que deseja desconectar-se?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "SAIR",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await AsyncStorage.clear();
+              router.replace('/(auth)/login');
+            } catch (e) {
+              Alert.alert("Erro", "Não foi possível sair.");
+            }
+          }
+        }
+      ]
+    );
   };
 
   if (loading || !character) {
@@ -130,17 +156,14 @@ export default function ConfigPersonagemScreen() {
 
         <View style={styles.header}>
           <TouchableOpacity onPress={pickImage} style={styles.avatarWrapper}>
-            {avatarUri ? (
-              <Image
-                source={{ uri: avatarUri }}
-                style={styles.avatar}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={[styles.avatar, { backgroundColor: '#E0E0E0', justifyContent: 'center', alignItems: 'center' }]}>
-                <Text style={{ color: '#555', fontWeight: 'bold' }}>Foto</Text>
-              </View>
-            )}
+            {/* CORREÇÃO AQUI: Usando CharacterAvatar em vez de AvatarWithFrame */}
+            <CharacterAvatar
+              imageUri={avatarUri}
+              molduraId={character.molduraId}
+              cabecaId={character.cabecaId}
+              maoId={character.maoId}
+              size={120}
+            />
           </TouchableOpacity>
 
           <View style={styles.levelBadge}>
@@ -178,6 +201,11 @@ export default function ConfigPersonagemScreen() {
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <Text style={styles.buttonText}>Salvar</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Sair da Conta</Text>
+          </TouchableOpacity>
+
         </View>
       </ScrollView>
     </ImageBackground>
@@ -185,7 +213,7 @@ export default function ConfigPersonagemScreen() {
 }
 
 const statusStyles = StyleSheet.create({
-  barContainer: { width: 130, height: 25, borderColor: '#000', borderWidth: 2, borderRadius: 5, overflow: 'hidden' },
+  barContainer: { width: 130, height: 25, borderColor: '#000', borderWidth: 2, borderRadius: 5, overflow: 'hidden', backgroundColor: 'white' },
   fill: { flexDirection: 'row', alignItems: 'center', height: '100%', paddingHorizontal: 5 },
   icon: { width: 18, height: 18, marginRight: 5 },
   value: { fontWeight: 'bold', color: '#000', textAlign: 'center', flex: 1 },
@@ -198,9 +226,12 @@ const styles = StyleSheet.create({
   logoTop: { width: 40, height: 40, marginBottom: 5 },
   configTop: { width: 28, height: 28 },
   header: { width: '100%', alignItems: 'center', marginBottom: 40 },
-  avatarWrapper: { width: 120, height: 120, borderRadius: 60, borderWidth: 4, borderColor: 'black', backgroundColor: 'white', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
-  avatar: { width: '100%', height: '100%', borderRadius: 60 },
-  levelBadge: { position: 'absolute', top: 105, right: '38%', backgroundColor: '#FFD700', borderRadius: 12.5, width: 25, height: 25, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'black', zIndex: 20 },
+  avatarWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10
+  },
+  levelBadge: { position: 'absolute', top: 105, right: '35%', backgroundColor: '#FFD700', borderRadius: 12.5, width: 25, height: 25, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'black', zIndex: 20 },
   levelText: { fontSize: 12, fontWeight: 'bold', color: 'black' },
   characterName: { fontSize: 18, fontWeight: 'bold', color: 'black', marginTop: 15, backgroundColor: 'white', paddingHorizontal: 10, paddingVertical: 2, borderWidth: 2, borderColor: 'black' },
   statusGroup: { flexDirection: 'row', justifyContent: 'center', marginTop: 15, gap: 10 },
@@ -211,6 +242,8 @@ const styles = StyleSheet.create({
   inputLine: { width: '100%', height: 40, borderBottomWidth: 2, borderBottomColor: 'white', color: 'white', fontSize: 18, paddingHorizontal: 5 },
   uploadButton: { width: '100%', height: 40, backgroundColor: '#E0E0E0', justifyContent: 'center', alignItems: 'center', borderRadius: 5, borderWidth: 2, borderColor: 'black', marginTop: 5 },
   uploadButtonText: { color: 'black', fontWeight: 'bold' },
-  saveButton: { width: '70%', height: 60, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center', borderRadius: 10, marginTop: 50, borderWidth: 4, borderColor: 'black', alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8 },
+  saveButton: { width: '70%', height: 60, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center', borderRadius: 10, marginTop: 40, borderWidth: 4, borderColor: 'black', alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8 },
   buttonText: { color: 'black', fontSize: 24, fontWeight: 'bold' },
+  logoutButton: { width: '100%', height: 50, backgroundColor: '#FF3B30', justifyContent: 'center', alignItems: 'center', borderRadius: 10, marginTop: 20, borderWidth: 2, borderColor: 'black' },
+  logoutText: { color: 'white', fontSize: 18, fontWeight: 'bold' }
 });

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Link, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import CharacterAvatar from '../components/CharacterAvatar'; // Importa o componente visual
 import api from '../services/api';
 
 // Assets
@@ -13,7 +14,7 @@ const HEART_ICON = require('../assets/heart-icon.png');
 const COIN_ICON = require('../assets/coin-icon.png');
 const ENERGY_ICON = require('../assets/energy-icon.png');
 
-// Componente StatusBar Atualizado para mostrar texto customizado
+// Componente StatusBar Atualizado
 const StatusBar = ({ value, iconSource, barColor, label }) => (
   <View style={statusStyles.barContainer}>
     <View style={[statusStyles.fill, { backgroundColor: barColor }]}>
@@ -108,28 +109,26 @@ export default function TelaPrincipalScreen() {
     }
   };
 
-  // Lógica de XP Necessário: 150 base + 50 por nível extra
   const getXpRequired = (level) => {
     return 150 + (level - 1) * 50;
   };
 
-  // Cálculo de recompensas/penalidades
   const calculateOutcome = (difficulty, effect) => {
     const diff = Number(difficulty);
-    const eff = Number(effect); // 1 = Positivo, 2 = Negativo
+    const eff = Number(effect);
 
     let deltaOuro = 0;
     let deltaXp = 0;
     let deltaVida = 0;
 
     if (eff === 1) { // POSITIVO
-      if (diff === 1) { deltaOuro = 20; deltaXp = 20; }      // Fácil
-      else if (diff === 2) { deltaOuro = 40; deltaXp = 40; } // Médio
-      else if (diff === 3) { deltaOuro = 50; deltaXp = 50; } // Difícil
+      if (diff === 1) { deltaOuro = 20; deltaXp = 20; }
+      else if (diff === 2) { deltaOuro = 40; deltaXp = 40; }
+      else if (diff === 3) { deltaOuro = 50; deltaXp = 50; }
     } else if (eff === 2) { // NEGATIVO
-      if (diff === 1) { deltaVida = -1; }      // Fácil
-      else if (diff === 2) { deltaVida = -3; } // Médio
-      else if (diff === 3) { deltaVida = -5; } // Difícil
+      if (diff === 1) { deltaVida = -1; }
+      else if (diff === 2) { deltaVida = -3; }
+      else if (diff === 3) { deltaVida = -5; }
     }
     return { deltaOuro, deltaXp, deltaVida };
   };
@@ -137,7 +136,6 @@ export default function TelaPrincipalScreen() {
   const handleToggleMission = async (mission) => {
     if (mission.status === 2) return;
 
-    // 1. Calcular Ganhos/Perdas
     const { deltaOuro, deltaXp, deltaVida } = calculateOutcome(mission.dificuldade, mission.efeito);
 
     let novoOuro = Number(character.ouro) + deltaOuro;
@@ -148,47 +146,35 @@ export default function TelaPrincipalScreen() {
     let mensagemAlert = "";
     let tituloAlert = "";
 
-    // 2. Lógica de Morte (Vida <= 0)
     if (novaVida <= 0) {
-      novaVida = 50; // Reseta vida base
-      novoNivel = 1; // Reseta nível
-      novoXp = 0;    // Reseta XP
-      novoOuro = Math.max(0, novoOuro); // Mantém ouro ou zera? Assumindo manter, mas sem ficar negativo.
-
+      novaVida = 50;
+      novoNivel = 1;
+      novoXp = 0;
+      novoOuro = Math.max(0, novoOuro);
       tituloAlert = "VOCÊ MORREU 💀";
       mensagemAlert = "Sua vida chegou a 0.\nVocê voltou para o Nível 1!";
     } else {
-      // Se não morreu, verifica se subiu de nível (apenas se ganhou XP)
       if (deltaXp > 0) {
         const xpNecessario = getXpRequired(novoNivel);
-
         if (novoXp >= xpNecessario) {
-          // SUBIU DE NÍVEL
           novoNivel += 1;
-          novoXp = novoXp - xpNecessario; // O que sobra fica para o próximo nível
-
-          // Nova vida máxima: 50 + 5 por nível
-          // Regra: "regeneraria completamente e ficaria com 5 pontos a mais"
+          novoXp = novoXp - xpNecessario;
           const novaMaxVida = 50 + (novoNivel - 1) * 5;
           novaVida = novaMaxVida;
-
           tituloAlert = "LEVEL UP! ⭐";
-          mensagemAlert = `Parabéns! Você alcançou o Nível ${novoNivel}!\nVida totalmente regenerada!\nSua vida máxima aumentou!`;
+          mensagemAlert = `Parabéns! Você alcançou o Nível ${novoNivel}!\nVida regenerada!\nSua vida máxima aumentou!`;
         } else {
           tituloAlert = "Missão Cumprida! 💰";
           mensagemAlert = `Recompensa:\n+${deltaOuro} Ouro\n+${deltaXp} XP`;
         }
       } else if (deltaVida < 0) {
-        // Sofreu dano (missão negativa)
         tituloAlert = "Dano Sofrido 🩸";
-        mensagemAlert = `Você perdeu ${Math.abs(deltaVida)} de vida por falhar ou efeito negativo.`;
+        mensagemAlert = `Você perdeu ${Math.abs(deltaVida)} de vida.`;
       }
     }
 
-    // Exibe o alerta na tela
     Alert.alert(tituloAlert, mensagemAlert);
 
-    // 3. Atualiza Estado Local (Feedback imediato)
     setCharacter(prev => ({
       ...prev,
       ouro: novoOuro,
@@ -197,15 +183,12 @@ export default function TelaPrincipalScreen() {
       nivel: novoNivel
     }));
 
-    // Remove a missão da lista visualmente
     setMissions(prev => prev.map(m => m.id === mission.id ? { ...m, status: 2 } : m));
     setTimeout(() => {
       setMissions(prev => prev.filter(m => m.id !== mission.id));
     }, 1000);
 
-    // 4. Atualiza no Backend
     try {
-      // A) Marca missão como concluída
       await api.put(`/api/missao/atualizar/${mission.id}`, {
         ...mission,
         status: 2,
@@ -214,7 +197,6 @@ export default function TelaPrincipalScreen() {
 
       const userId = character.usuario?.id || await AsyncStorage.getItem('usuarioId');
 
-      // B) Atualiza status do personagem
       const updatedCharPayload = {
         ...character,
         id: character.id,
@@ -226,13 +208,11 @@ export default function TelaPrincipalScreen() {
       };
       await api.put(`/api/personagem/atualizar/${character.id}`, updatedCharPayload);
 
-      // C) REGISTRA NA TABELA DE GANHOS (Histórico)
-      // Aqui enviamos os DELTAS (o que ganhou ou perdeu)
       await api.post('/api/ganho/criar', {
-        ouro: deltaOuro, // Ex: 20 ou 0
-        xp: deltaXp,     // Ex: 20 ou 0
-        vida: deltaVida, // Ex: -5 ou 0 (Enviando negativo para representar perda)
-        nivel: novoNivel, // Nível atual após a ação
+        ouro: deltaOuro,
+        xp: deltaXp,
+        vida: deltaVida,
+        nivel: novoNivel,
         personagemId: character.id
       });
 
@@ -263,7 +243,6 @@ export default function TelaPrincipalScreen() {
     )
   }
 
-  // Define texto para barra de XP: "Atual / Necessário"
   const xpNecessarioAtual = getXpRequired(character.nivel);
   const xpTexto = `${Math.floor(character.xp)} / ${xpNecessarioAtual}`;
 
@@ -284,19 +263,17 @@ export default function TelaPrincipalScreen() {
         <View style={styles.header}>
           <Link href="/config-personagem" asChild>
             <TouchableOpacity style={styles.avatarSection} activeOpacity={0.8}>
-              {avatarUri ? (
-                <Image
-                  source={{ uri: avatarUri }}
-                  style={styles.avatar}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={[styles.avatar, { backgroundColor: '#CCCCCC', justifyContent: 'center', alignItems: 'center' }]}>
-                  <Text style={{ fontSize: 40 }}>👤</Text>
-                </View>
-              )}
 
-              {/* Badge de Nível (Ajustado para não ficar escondido) */}
+              {/* AVATAR COM ITENS */}
+              <CharacterAvatar
+                imageUri={avatarUri}
+                molduraId={character.molduraId}
+                cabecaId={character.cabecaId}
+                maoId={character.maoId}
+                size={120}
+              />
+
+              {/* Badge de Nível */}
               <View style={styles.levelBadge}>
                 <Text style={styles.levelText}>{character.nivel}</Text>
               </View>
@@ -310,14 +287,8 @@ export default function TelaPrincipalScreen() {
             <StatusBar value={character.ouro} iconSource={COIN_ICON} barColor="#FFD700" />
           </View>
 
-          {/* Barra de XP com texto "Atual / Necessário" */}
           <View style={styles.statusSingle}>
-            <StatusBar
-              value={character.xp}
-              label={xpTexto}
-              iconSource={ENERGY_ICON}
-              barColor="#38B000"
-            />
+            <StatusBar value={character.xp} label={xpTexto} iconSource={ENERGY_ICON} barColor="#38B000" />
           </View>
         </View>
 
@@ -365,29 +336,15 @@ const styles = StyleSheet.create({
   configTop: { width: 42, height: 42 },
   header: { alignItems: 'center', marginBottom: 10 },
   avatarSection: {
-    marginTop: 50,
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: 'white',
-    borderWidth: 3,
-    borderColor: 'black',
+    marginTop: 30, // Reduzi margem para caber o chapéu
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative', // Importante para o badge absoluto funcionar bem
-    overflow: 'visible'   // Permite que o badge saia um pouco da borda se precisar
+    position: 'relative'
   },
-  avatar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 55,
-    overflow: 'hidden', // Corta a imagem redonda
-  },
-  // ESTILO DO BADGE DE NÍVEL CORRIGIDO
   levelBadge: {
     position: 'absolute',
-    bottom: -5,  // Fica na parte inferior
-    right: -5,   // Fica na direita
+    bottom: 5,
+    right: -10,
     width: 30,
     height: 30,
     backgroundColor: '#FFD700',
@@ -396,11 +353,11 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 999, // Garante que fique por cima de tudo
-    elevation: 5 // Sombra no Android
+    zIndex: 999,
+    elevation: 5
   },
   levelText: { fontSize: 14, fontWeight: 'bold', color: 'black' },
-  characterName: { fontWeight: 'bold', fontSize: 16, color: 'black', marginTop: 15, backgroundColor: 'white', borderColor: 'black', borderWidth: 2, paddingHorizontal: 8, paddingVertical: 3 },
+  characterName: { fontWeight: 'bold', fontSize: 16, color: 'black', marginTop: 5, backgroundColor: 'white', borderColor: 'black', borderWidth: 2, paddingHorizontal: 8, paddingVertical: 3 },
   statusGroup: { flexDirection: 'row', justifyContent: 'center', marginTop: 10, gap: 10 },
   statusSingle: { flexDirection: 'row', justifyContent: 'center', marginTop: 5 },
   title: { fontSize: 24, color: 'white', backgroundColor: '#0047FF', borderWidth: 3, borderColor: 'black', fontWeight: 'bold', paddingHorizontal: 30, paddingVertical: 5, marginVertical: 10 },
@@ -423,7 +380,7 @@ const missionStyles = StyleSheet.create({
   textArea: { flex: 1 },
   title: { fontWeight: 'bold', color: 'black' },
   completed: { textDecorationLine: 'line-through', color: 'gray' },
-  subtitle: { fontSize: 10, color: '#444' }, // Fonte menor para detalhes
+  subtitle: { fontSize: 10, color: '#444' },
   iconRight: { marginLeft: 10 },
   bookIcon: { fontSize: 18 },
 });
