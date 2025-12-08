@@ -15,7 +15,7 @@ import {
 import { ITEMS_DB, ITEM_TYPE } from '../constants/Items'; // Importa a BD de Itens
 import api from '../services/api';
 
-const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
+const BACKGROUND_IMAGE = require('../assets/android-icon-foreground.png');
 const DAHT_LOGO = require('../assets/daht-logo.png');
 const SETTINGS_ICON = require('../assets/configuracao-icon.png');
 const COIN_ICON = require('../assets/coin-icon.png');

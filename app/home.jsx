@@ -6,7 +6,7 @@ import CharacterAvatar from '../components/CharacterAvatar'; // Importa o compon
 import api from '../services/api';
 
 // Assets
-const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
+const BACKGROUND_IMAGE = require('../assets/android-icon-foreground.png');
 const DAHT_LOGO = require('../assets/daht-logo.png');
 const SETTINGS_ICON = require('../assets/configuracao-icon.png');
 const SHOP_ICON = require('../assets/shop-icon.png');

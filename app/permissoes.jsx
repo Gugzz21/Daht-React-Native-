@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, ImageBackground, Linking, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
+const BACKGROUND_IMAGE = require('../assets/android-icon-foreground.png');
 const DAHT_LOGO = require('../assets/daht-logo.png');
 
 export default function PermissoesScreen() {

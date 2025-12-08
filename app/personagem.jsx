@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import api from '../services/api';
 
-const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
+const BACKGROUND_IMAGE = require('../assets/android-icon-foreground.png');
 const DAHT_LOGO = require('../assets/daht-logo.png');
 
 export default function CriacaoPersonagemScreen() {

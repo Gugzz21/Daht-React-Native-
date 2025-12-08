@@ -1,8 +1,8 @@
 import { useRouter } from 'expo-router';
 import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
-const SNOOPY_IMAGE = require('../assets/snoopy.png'); 
+const BACKGROUND_IMAGE = require('../assets/android-icon-foreground.png');
+const SNOOPY_IMAGE = require('../assets/snoopy.png');
 const DAHT_LOGO = require('../assets/daht-logo.png');
 
 export default function ConfiguracoesScreen() {
@@ -26,8 +26,8 @@ export default function ConfiguracoesScreen() {
   };
 
   const renderOption = (text) => (
-    <TouchableOpacity 
-      style={styles.optionRow} 
+    <TouchableOpacity
+      style={styles.optionRow}
       key={text}
       onPress={() => handleOptionPress(text)}
     >
@@ -35,32 +35,32 @@ export default function ConfiguracoesScreen() {
       <View style={styles.divider} />
     </TouchableOpacity>
   );
-  
+
   const handleGoBack = () => {
     router.back();
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ImageBackground 
-        source={BACKGROUND_IMAGE} 
+      <ImageBackground
+        source={BACKGROUND_IMAGE}
         style={styles.container}
         resizeMode="cover"
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          
+
           <View style={styles.header}>
             <Text style={styles.title}>CONFIGURAÇÕES</Text>
             <View style={styles.dividerLarge} />
-            
-            <Image 
-                source={DAHT_LOGO} 
-                style={styles.logoSmall} 
-                resizeMode="contain"
+
+            <Image
+              source={DAHT_LOGO}
+              style={styles.logoSmall}
+              resizeMode="contain"
             />
-            
+
             <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-                 <Text style={styles.backButtonText}>{'<'}</Text>
+              <Text style={styles.backButtonText}>{'<'}</Text>
             </TouchableOpacity>
           </View>
 
@@ -69,8 +69,8 @@ export default function ConfiguracoesScreen() {
           </View>
 
           <View style={styles.snoopyContainer}>
-            <Image 
-              source={SNOOPY_IMAGE} 
+            <Image
+              source={SNOOPY_IMAGE}
               style={styles.snoopyImage}
               resizeMode="cover"
             />
@@ -96,23 +96,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     flexGrow: 1,
   },
- logoSmall: {
-  position: 'absolute',
-  top: 1,
-  right: 1,
-  width: 40,
-  height: 40,
-},
+  logoSmall: {
+    position: 'absolute',
+    top: 1,
+    right: 1,
+    width: 40,
+    height: 40,
+  },
   backButton: {
     position: 'absolute',
-    top: 50, 
+    top: 50,
     left: 20,
     padding: 5,
   },
   backButtonText: {
-      fontSize: 30,
-      color: 'white',
-      fontWeight: 'bold',
+    fontSize: 30,
+    color: 'white',
+    fontWeight: 'bold',
   },
   header: {
     width: '100%',
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
   },
   optionsList: {
     width: '100%',
-    flex: 1, 
+    flex: 1,
   },
   optionRow: {
     marginBottom: 10,

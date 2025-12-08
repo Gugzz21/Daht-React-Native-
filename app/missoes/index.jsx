@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { Image, ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 // === Imagens ===
-const BACKGROUND_IMAGE = require('../../assets/fundo-site.png');
+const BACKGROUND_IMAGE = require('../../assets/android-icon-foreground.png');
 const DAHT_LOGO = require('../../assets/daht-logo.png');
 const SETTINGS_ICON = require('../../assets/configuracao-icon.png');
-const SHOP_ICON = require('../../assets/shop-icon.png'); 
+const SHOP_ICON = require('../../assets/shop-icon.png');
 const CHARACTER_AVATAR = require('../../assets/snoopy.png');
 const HEART_ICON = require('../../assets/heart-icon.png');
 const COIN_ICON = require('../../assets/coin-icon.png');
@@ -50,7 +50,7 @@ export default function MissoesScreen() {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <ImageBackground source={BACKGROUND_IMAGE} style={styles.container} resizeMode="cover">
-        
+
         {/* === Ícones no topo === */}
         <View style={styles.topRightCorner}>
           <Image source={DAHT_LOGO} style={styles.logoTop} resizeMode="contain" />

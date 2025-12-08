@@ -21,7 +21,7 @@ import CharacterAvatar from '../components/CharacterAvatar';
 const ICON_HEART = require('../assets/heart-icon.png');
 const ICON_GOLD = require('../assets/coin-icon.png');
 const ICON_XP = require('../assets/energy-icon.png');
-const BACKGROUND_IMAGE = require('../assets/fundo-site.png');
+const BACKGROUND_IMAGE = require('../assets/android-icon-foreground.png');
 const DAHT_LOGO = require('../assets/daht-logo.png');
 const SETTINGS_ICON = require('../assets/configuracao-icon.png');
 

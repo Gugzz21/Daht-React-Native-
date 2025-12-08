@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import DahtLogo from '../../components/DahtLogo';
 import api from '../../services/api';
 
-const BACKGROUND_IMAGE = require('../../assets/fundo-site.png');
+const BACKGROUND_IMAGE = require('../../assets/android-icon-foreground.png');
 const { width } = Dimensions.get('window');
 const LOGO_SIZE = Math.min(180, width * 0.48);
 

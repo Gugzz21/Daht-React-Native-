@@ -5,7 +5,7 @@ import { Alert, Dimensions, ImageBackground, StyleSheet, Text, TextInput, Toucha
 import DahtLogo from '../../components/DahtLogo';
 import api from '../../services/api';
 
-const BACKGROUND_IMAGE = require('../../assets/fundo-site.png');
+const BACKGROUND_IMAGE = require('../../assets/android-icon-foreground.png');
 const { width, height } = Dimensions.get('window');
 const LOGO_SIZE = Math.min(200, width * 0.52);
 
