@@ -11,11 +11,15 @@ const api = axios.create({
 api.interceptors.request.use(async (config) => {
   try {
     const token = await AsyncStorage.getItem('token');
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("Interceptor: Token adicionado ao header");
+    } else {
+      console.log("Interceptor: Nenhum token encontrado no storage");
     }
   } catch (error) {
-    console.log("Erro ao pegar token", error);
+    console.log("Erro ao pegar token no interceptor", error);
   }
   return config;
 });
@@ -25,16 +29,19 @@ api.interceptors.response.use(
   (response) => response, // Se der tudo certo, apenas retorna
   async (error) => {
     // Se o erro for 403 (Proibido) ou 401 (Não Autorizado)
-    if (error.response && (error.response.status === 403 || error.response.status === 401)) {
-      console.log("Sessão expirada ou inválida. Deslogando...");
-      
-      // 1. Limpa o token inválido
-      await AsyncStorage.clear();
-      
-      // 2. Manda o usuário para o Login
-      // Nota: O router.replace pode não funcionar perfeitamente dentro do axios dependendo da versão,
-      // mas é uma tentativa válida. Caso contrário, o usuário terá que reiniciar o app.
-      router.replace('/(auth)/login');
+    if (error.response) {
+      console.log(`Erro API: Status ${error.response.status} - URL: ${error.config.url}`);
+      console.log("Dados do erro:", error.response.data);
+
+      if (error.response.status === 403 || error.response.status === 401) {
+        console.log("Sessão expirada ou inválida. Deslogando...");
+        await AsyncStorage.clear();
+        router.replace('/(auth)/login');
+      }
+    } else if (error.request) {
+      console.log("Erro API: Sem resposta do servidor", error.request);
+    } else {
+      console.log("Erro API: Falha na configuração da requisição", error.message);
     }
     return Promise.reject(error);
   }

@@ -110,6 +110,8 @@ export default function EditarMissao() {
         personagemId: mission.personagemId || (mission.personagem ? mission.personagem.id : null)
       };
 
+      console.log("DEBUG: Update Payload:", JSON.stringify(payload, null, 2));
+
       await api.put(`/api/missao/atualizar/${id}`, payload);
       Alert.alert("Sucesso", "Missão atualizada!");
       router.back();

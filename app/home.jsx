@@ -37,7 +37,7 @@ const MissionItem = ({ mission, onToggle }) => (
         MISSÃO: {mission.descricao}
       </Text>
       <Text style={missionStyles.subtitle}>
-        Dificuldade: {mission.dificuldade} | Efeito: {mission.efeito === 1 ? 'Positivo' : 'Negativo'}
+        Dificuldade: {mission.dificuldade} | Efeito: {mission.efeito == 1 ? 'Positivo' : (mission.efeito == 2 ? 'Negativo' : 'Neutro')}
       </Text>
       <Text style={missionStyles.subtitle}>
         Até: {mission.dataFinalizacao ? mission.dataFinalizacao.split('-').reverse().join('/') : 'Sem data'}
@@ -95,11 +95,14 @@ export default function TelaPrincipalScreen() {
         setCharacter(charRes.data);
 
         const missoesRes = await api.get('/api/missao/listar');
+        console.log("DEBUG: Raw API Response for Missions:", JSON.stringify(missoesRes.data, null, 2));
+
         const minhasMissoes = missoesRes.data.filter(m => {
           const idNaMissao = m.personagemId || (m.personagem && m.personagem.id);
           return idNaMissao == charId && m.status === 1;
         });
 
+        console.log("DEBUG: Filtered Missions:", JSON.stringify(minhasMissoes, null, 2));
         setMissions(minhasMissoes);
       }
     } catch (e) {
@@ -171,6 +174,11 @@ export default function TelaPrincipalScreen() {
         tituloAlert = "Dano Sofrido 🩸";
         mensagemAlert = `Você perdeu ${Math.abs(deltaVida)} de vida.`;
       }
+    }
+
+    if (!tituloAlert) {
+      tituloAlert = "Missão Concluída";
+      mensagemAlert = "Missão concluída com sucesso.";
     }
 
     Alert.alert(tituloAlert, mensagemAlert);

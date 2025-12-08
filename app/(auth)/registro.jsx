@@ -166,7 +166,22 @@ export default function RegistroScreen() {
 
     } catch (error) {
       console.error("Erro Registro:", error);
-      Alert.alert('Erro', 'Falha ao registrar. Verifique se o email já está em uso.');
+
+      let msg = "Falha ao registrar. Verifique sua conexão.";
+
+      if (error.response) {
+        msg = error.response.data?.message || `Erro do servidor (${error.response.status})`;
+        // Tenta pegar erros de validação específicos se o backend enviar
+        if (error.response.data?.errors) {
+          msg += "\n" + JSON.stringify(error.response.data.errors);
+        }
+      } else if (error.request) {
+        msg = "O servidor não respondeu. Tente novamente mais tarde.";
+      } else {
+        msg = `Erro na requisição: ${error.message}`;
+      }
+
+      Alert.alert('Erro no Registro', msg);
     }
   };
 

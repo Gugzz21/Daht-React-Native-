@@ -105,6 +105,7 @@ export default function NovaMissao() {
         // CORREÇÃO: Enviando o ID plano, conforme o Java espera (evita o NullPointerException)
         personagemId: parseInt(charId)
       };
+      console.log("DEBUG: Create Payload:", JSON.stringify(payload, null, 2));
 
       await api.post('/api/missao/criar', payload);
       Alert.alert("Sucesso", "Missão criada!");

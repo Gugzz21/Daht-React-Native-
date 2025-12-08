@@ -48,12 +48,29 @@ export default function LoginScreen() {
           console.log("Erro ao buscar detalhes do usuário no login:", fetchError);
         }
         // -------------------------------------------------
-
         router.replace('/home');
+      } else {
+        // Fallback para status diferente de 200 que não caiu no catch
+        Alert.alert('Atenção', `Login retornou status inesperado: ${response.status}`);
       }
     } catch (error) {
-      console.error(error);
-      Alert.alert('Erro', 'Credenciais inválidas ou erro de conexão.');
+      console.log("Erro Login:", error);
+
+      let msg = "Não foi possível conectar ao servidor. Verifique sua internet.";
+
+      if (error.response) {
+        // O servidor respondeu com um status fora da faixa de 2xx
+        msg = error.response.data?.message || `Erro do servidor (${error.response.status})`;
+      } else if (error.request) {
+        // A requisição foi feita mas não houve resposta
+        msg = "O servidor não respondeu. Tente novamente mais tarde.";
+        // Verifique se o endereço do API_URL é acessível do dispositivo
+      } else {
+        // Algo aconteceu na configuração da requisição
+        msg = `Erro na requisição: ${error.message}`;
+      }
+
+      Alert.alert('Erro no Login', msg);
     }
   };
 
