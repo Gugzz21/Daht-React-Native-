@@ -16,6 +16,7 @@ import {
 import api from '../services/api';
 // Importação corrigida do componente visual
 import CharacterAvatar from '../components/CharacterAvatar';
+import { ITEMS_DB, ITEM_TYPE } from '../constants/Items';
 
 // Assets
 const ICON_HEART = require('../assets/heart-icon.png');
@@ -39,6 +40,7 @@ export default function ConfigPersonagemScreen() {
   const [character, setCharacter] = useState(null);
   const [newNickname, setNewNickname] = useState('');
   const [avatarUri, setAvatarUri] = useState(null);
+  const [ownedItems, setOwnedItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useFocusEffect(
@@ -59,6 +61,20 @@ export default function ConfigPersonagemScreen() {
         const charData = response.data;
         setCharacter(charData);
         setNewNickname(charData.nickname);
+
+        // Fetch Owned Items
+        try {
+          const ownedRes = await api.get('/api/tabelapremio/listar');
+          // Filter items that belong to this character
+          // Assuming the API returns an array of objects with { premioId, personagemId }
+          const myItems = ownedRes.data.filter(item =>
+            (item.personagem && item.personagem.id == charId) ||
+            (item.personagemId == charId)
+          );
+          setOwnedItems(myItems);
+        } catch (e) {
+          console.log("Erro ao carregar itens comprados", e);
+        }
       } else {
         Alert.alert("Erro", "Personagem não encontrado.");
         router.back();
@@ -82,6 +98,22 @@ export default function ConfigPersonagemScreen() {
     if (!result.canceled) {
       setAvatarUri(result.assets[0].uri);
     }
+  };
+
+  const handleEquip = (premioId) => {
+    const itemVisual = ITEMS_DB[premioId];
+    if (!itemVisual) return;
+
+    setCharacter(prev => {
+      let updates = {};
+      if (itemVisual.type === ITEM_TYPE.MOLDURA) updates.molduraId = premioId;
+      if (itemVisual.type === ITEM_TYPE.CABECA) updates.cabecaId = premioId;
+      if (itemVisual.type === ITEM_TYPE.MAO) updates.maoId = premioId;
+
+      // Se clicar no item já equipado, pode desequipar? Opcional.
+      // Por enquanto, apenas troca.
+      return { ...prev, ...updates };
+    });
   };
 
   const handleSave = async () => {
@@ -181,6 +213,40 @@ export default function ConfigPersonagemScreen() {
           </View>
         </View>
 
+        {/* MINI MENU DE ITENS */}
+        <View style={styles.itemsContainer}>
+          <Text style={styles.sectionTitle}>Meus Itens (Toque para Equipar)</Text>
+          <View style={styles.itemsGrid}>
+            {ownedItems.length === 0 ? (
+              <Text style={{ color: 'white' }}>Nenhum item comprado.</Text>
+            ) : (
+              ownedItems.map((entry, index) => {
+                // entry.premioId é o ID do item
+                const pId = entry.premioId || (entry.premio && entry.premio.id);
+                const visual = ITEMS_DB[pId];
+                if (!visual) return null;
+
+                // Check if equipped
+                const isEquipped =
+                  character.molduraId == pId ||
+                  character.cabecaId == pId ||
+                  character.maoId == pId;
+
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[styles.itemBox, isEquipped && styles.itemEquipped]}
+                    onPress={() => handleEquip(pId)}
+                  >
+                    <Image source={visual.source} style={styles.itemImage} resizeMode="contain" />
+                    {isEquipped && <View style={styles.equippedIndicator} />}
+                  </TouchableOpacity>
+                );
+              })
+            )}
+          </View>
+        </View>
+
         <View style={styles.formContainer}>
           <Text style={styles.label}>Alterar Nickname:</Text>
           <TextInput
@@ -245,5 +311,12 @@ const styles = StyleSheet.create({
   saveButton: { width: '70%', height: 60, backgroundColor: 'white', justifyContent: 'center', alignItems: 'center', borderRadius: 10, marginTop: 40, borderWidth: 4, borderColor: 'black', alignSelf: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 8 },
   buttonText: { color: 'black', fontSize: 24, fontWeight: 'bold' },
   logoutButton: { width: '100%', height: 50, backgroundColor: '#FF3B30', justifyContent: 'center', alignItems: 'center', borderRadius: 10, marginTop: 20, borderWidth: 2, borderColor: 'black' },
-  logoutText: { color: 'white', fontSize: 18, fontWeight: 'bold' }
+  logoutText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
+  itemsContainer: { width: '90%', marginBottom: 20, alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 10, borderRadius: 10, borderWidth: 2, borderColor: '#FFF' },
+  sectionTitle: { color: 'white', fontWeight: 'bold', marginBottom: 10, fontSize: 16 },
+  itemsGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 },
+  itemBox: { width: 60, height: 60, backgroundColor: 'white', borderRadius: 8, justifyContent: 'center', alignItems: 'center', borderWidth: 2, borderColor: '#555' },
+  itemEquipped: { borderColor: '#38B000', borderWidth: 4, backgroundColor: '#E0FFE0' },
+  itemImage: { width: 45, height: 45 },
+  equippedIndicator: { position: 'absolute', top: 2, right: 2, width: 10, height: 10, backgroundColor: '#38B000', borderRadius: 5 }
 });

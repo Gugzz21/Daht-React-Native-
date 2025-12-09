@@ -125,15 +125,19 @@ export default function TelaPrincipalScreen() {
     let deltaVida = 0;
 
     if (eff === 1) { // POSITIVO
-      if (diff === 1) { deltaOuro = 20; deltaXp = 20; }
+      if (diff === 1) { deltaOuro = 30; deltaXp = 30; }
       else if (diff === 2) { deltaOuro = 40; deltaXp = 40; }
       else if (diff === 3) { deltaOuro = 50; deltaXp = 50; }
     } else if (eff === 2) { // NEGATIVO
-      if (diff === 1) { deltaVida = -1; }
+      if (diff === 1) { deltaVida = -2; }
       else if (diff === 2) { deltaVida = -3; }
       else if (diff === 3) { deltaVida = -5; }
     }
     return { deltaOuro, deltaXp, deltaVida };
+  };
+
+  const getMaxHealth = (level) => {
+    return 50 + (level - 1) * 25;
   };
 
   const handleToggleMission = async (mission) => {
@@ -150,20 +154,38 @@ export default function TelaPrincipalScreen() {
     let tituloAlert = "";
 
     if (novaVida <= 0) {
-      novaVida = 50;
+      novaVida = 50; // Vida inicial
       novoNivel = 1;
       novoXp = 0;
-      novoOuro = Math.max(0, novoOuro);
+      // Mantemos o ouro ou resetamos? O usuário disse "todos os atributos iniciais". 
+      // Geralmente gold não é atributo, mas status. Vou manter o ouro ganho na sessão ou atual.
+      // novoOuro = novoOuro; 
       tituloAlert = "VOCÊ MORREU 💀";
-      mensagemAlert = "Sua vida chegou a 0.\nVocê voltou para o Nível 1!";
+      mensagemAlert = "Sua vida chegou a 0.\nVocê voltou para o Nível 1 com atributos iniciais!";
     } else {
       if (deltaXp > 0) {
-        const xpNecessario = getXpRequired(novoNivel);
-        if (novoXp >= xpNecessario) {
-          novoNivel += 1;
-          novoXp = novoXp - xpNecessario;
-          const novaMaxVida = 50 + (novoNivel - 1) * 5;
-          novaVida = novaMaxVida;
+        // Lógica de Level Up
+        // Pode subir multiplos niveis se ganhar muito XP de uma vez?
+        // Com os valores atuais (30/40/50) e niveis de 150+, dificil subir 2 niveis de uma vez
+        // Mas vamos fazer um loop while rapidinho ou if recursivo? if simples serve por enquanto.
+
+        let subiuNivel = false;
+
+        // Loop para garantir múltiplos level ups se necessário (embora raro com esses valores)
+        while (true) {
+          const xpNecessario = getXpRequired(novoNivel);
+          if (novoXp >= xpNecessario) {
+            novoNivel += 1;
+            novoXp = novoXp - xpNecessario;
+            subiuNivel = true;
+          } else {
+            break;
+          }
+        }
+
+        if (subiuNivel) {
+          const novaMaxVida = getMaxHealth(novoNivel);
+          novaVida = novaMaxVida; // Recupera vida toda e atualiza para novo maximo
           tituloAlert = "LEVEL UP! ⭐";
           mensagemAlert = `Parabéns! Você alcançou o Nível ${novoNivel}!\nVida regenerada!\nSua vida máxima aumentou!`;
         } else {

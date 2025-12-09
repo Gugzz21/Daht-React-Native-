@@ -34,10 +34,12 @@ api.interceptors.response.use(
       console.log(`Erro API: Status ${error.response.status} - URL: ${error.config.url}`);
       console.log("Dados do erro:", error.response.data);
 
-      if (error.response.status === 403 || error.response.status === 401) {
-        console.log("Sessão expirada ou inválida. Deslogando...");
+      if (error.response.status === 401) {
+        console.log("Sessão expirada ou inválida (401). Deslogando...");
         await AsyncStorage.clear();
         router.replace('/(auth)/login');
+      } else if (error.response.status === 403) {
+        console.log("Acesso negado (403). Verifique as permissões.");
       }
     } else if (error.request) {
       console.log("Erro API: Sem resposta do servidor", error.request);
