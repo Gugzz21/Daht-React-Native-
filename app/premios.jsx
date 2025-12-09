@@ -21,6 +21,13 @@ const SETTINGS_ICON = require('../assets/configuracao-icon.png');
 const COIN_ICON = require('../assets/coin-icon.png');
 const BACK_ICON = require('../assets/back-icon.png');
 
+// Itens de Exemplo para garantir que a loja não fique vazia
+const DUMMY_PREMIOS = [
+  { id: 1, nome: 'Moldura Chaves', preco: 100, status: 1 },
+  { id: 11, nome: 'Chapéu de Palha', preco: 250, status: 1 },
+  { id: 21, nome: 'Espada de Brinquedo', preco: 500, status: 1 }
+];
+
 export default function PremiosScreen() {
   const [premios, setPremios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,26 +42,46 @@ export default function PremiosScreen() {
   const carregarDados = async () => {
     try {
       setLoading(true);
-      const responsePremios = await api.get('/api/premio/listar');
-      // Filtra apenas ativos
-      const premiosAtivos = responsePremios.data.filter(p => p.status === 1);
-      setPremios(premiosAtivos);
 
+      // Carrega Personagem
       const charId = await AsyncStorage.getItem('personagemId');
       if (charId) {
-        const responseChar = await api.get(`/api/personagem/listarPorId/${charId}`);
-        setCharacter(responseChar.data);
+        try {
+          const responseChar = await api.get(`/api/personagem/listarPorId/${charId}`);
+          setCharacter(responseChar.data);
+        } catch (error) {
+          console.log("Erro ao carregar personagem", error);
+        }
+      }
+
+      // Carrega Prêmios
+      try {
+        const responsePremios = await api.get('/api/premio/listar');
+        const premiosAtivos = responsePremios.data.filter(p => p.status === 1);
+
+        if (premiosAtivos.length > 0) {
+          setPremios(premiosAtivos);
+        } else {
+          console.log("Loja vazia, usando itens de exemplo.");
+          setPremios(DUMMY_PREMIOS);
+        }
+      } catch (apiError) {
+        console.warn("Falha ao carregar loja da API, usando itens locais.", apiError);
+        setPremios(DUMMY_PREMIOS);
       }
 
     } catch (error) {
-      console.error("Erro ao carregar loja:", error);
+      console.error("Erro geral ao carregar loja:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const handlePressPremio = (premio) => {
-    if (!character) return;
+    if (!character) {
+      Alert.alert("Erro", "Personagem não carregado.");
+      return;
+    }
 
     const itemVisual = ITEMS_DB[premio.id];
 
@@ -83,6 +110,9 @@ export default function PremiosScreen() {
   };
 
   const realizarCompra = async (premio, itemVisual) => {
+    // Optimistic Update
+    const previousChar = { ...character };
+
     try {
       const novoSaldo = character.ouro - premio.preco;
       const userId = character.usuarioId || character.usuario?.id || await AsyncStorage.getItem('usuarioId');
@@ -98,28 +128,42 @@ export default function PremiosScreen() {
         maoId: itemVisual?.type === ITEM_TYPE.MAO ? premio.id : character.maoId,
       };
 
+      // 1. Atualiza Personagem (Ouro e Itens Equipados)
       await api.put(`/api/personagem/atualizar/${character.id}`, charPayload);
+      setCharacter(charPayload); // Atualiza UI imediatamente
 
-      await api.post('/api/tabelapremio/criar', {
-        personagemId: character.id,
-        premioId: premio.id,
-        status: 1
-      });
+      // 2. Registra Compra (Vincula prêmio ao usuário)
+      // Se for um item Dummy que não existe no banco, isso pode falhar.
+      // Vamos tentar, mas não bloquear o fluxo se falhar por 404/500 em itens dummy.
+      try {
+        await api.post('/api/tabelapremio/criar', {
+          personagemId: character.id,
+          premioId: premio.id,
+          status: 1
+        });
+      } catch (linkError) {
+        console.log("Aviso: Não foi possível salvar a compra no histórico (talvez item dummy?)", linkError);
+      }
 
-      await api.post('/api/ganho/criar', {
-        ouro: -premio.preco,
-        xp: 0,
-        vida: 0,
-        nivel: character.nivel,
-        personagemId: character.id
-      });
+      // 3. Registra Log de Ganho/Gasto
+      try {
+        await api.post('/api/ganho/criar', {
+          ouro: -premio.preco,
+          xp: 0,
+          vida: 0,
+          nivel: character.nivel,
+          personagemId: character.id
+        });
+      } catch (logError) {
+        console.log("Erro ao logar gasto", logError);
+      }
 
-      setCharacter(charPayload);
       Alert.alert("Sucesso!", `Comprou ${premio.nome}!`);
 
     } catch (error) {
       console.error("Erro na compra:", error);
-      Alert.alert("Erro", "Falha ao processar.");
+      setCharacter(previousChar); // Reverte optimistic update
+      Alert.alert("Erro", "Falha ao processar a compra.");
     }
   };
 

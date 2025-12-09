@@ -6,6 +6,7 @@ const API_URL = 'http://academico3.rj.senac.br/daht';
 
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 10000,
 });
 
 api.interceptors.request.use(async (config) => {

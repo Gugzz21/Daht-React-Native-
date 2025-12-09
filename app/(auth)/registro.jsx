@@ -179,7 +179,12 @@ export default function RegistroScreen() {
         msg = "O servidor não respondeu. Tente novamente mais tarde.";
       } else {
         msg = `Erro na requisição: ${error.message}`;
+        if (error.code) {
+          msg += ` (Código: ${error.code})`;
+        }
       }
+      // Debug info for release builds
+      msg += `\n\nDetalhes: ${JSON.stringify(error)}`;
 
       Alert.alert('Erro no Registro', msg);
     }

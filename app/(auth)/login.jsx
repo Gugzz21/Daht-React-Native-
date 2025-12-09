@@ -68,7 +68,13 @@ export default function LoginScreen() {
       } else {
         // Algo aconteceu na configuração da requisição
         msg = `Erro na requisição: ${error.message}`;
+        if (error.code) {
+          msg += ` (Código: ${error.code})`;
+        }
       }
+
+      // Append raw error for debugging in release builds if needed
+      msg += `\n\nDetalhes: ${JSON.stringify(error)}`;
 
       Alert.alert('Erro no Login', msg);
     }
