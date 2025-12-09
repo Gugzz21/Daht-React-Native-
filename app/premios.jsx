@@ -133,8 +133,7 @@ export default function PremiosScreen() {
       setCharacter(charPayload); // Atualiza UI imediatamente
 
       // 2. Registra Compra (Vincula prêmio ao usuário)
-      // Se for um item Dummy que não existe no banco, isso pode falhar.
-      // Vamos tentar, mas não bloquear o fluxo se falhar por 404/500 em itens dummy.
+      // Tenta API
       try {
         await api.post('/api/tabelapremio/criar', {
           personagemId: character.id,
@@ -142,10 +141,22 @@ export default function PremiosScreen() {
           status: 1
         });
       } catch (linkError) {
-        console.log("Aviso: Não foi possível salvar a compra no histórico (talvez item dummy?)", linkError);
+        console.log("Aviso: Não foi possível salvar a compra no backend (usando local fallback)", linkError);
       }
 
-      // 3. Registra Log de Ganho/Gasto
+      // 3. Fallback/Hybrid: Salva compra localmente para garantir
+      try {
+        const storedItems = await AsyncStorage.getItem(`owned_items_${character.id}`);
+        let localItems = storedItems ? JSON.parse(storedItems) : [];
+        if (!localItems.includes(premio.id)) {
+          localItems.push(premio.id);
+          await AsyncStorage.setItem(`owned_items_${character.id}`, JSON.stringify(localItems));
+        }
+      } catch (localError) {
+        console.log("Erro ao salvar itens locais", localError);
+      }
+
+      // 4. Registra Log de Ganho/Gasto
       try {
         await api.post('/api/ganho/criar', {
           ouro: -premio.preco,

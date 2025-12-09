@@ -63,18 +63,45 @@ export default function ConfigPersonagemScreen() {
         setNewNickname(charData.nickname);
 
         // Fetch Owned Items
+        let allItems = [];
         try {
           const ownedRes = await api.get('/api/tabelapremio/listar');
-          // Filter items that belong to this character
-          // Assuming the API returns an array of objects with { premioId, personagemId }
-          const myItems = ownedRes.data.filter(item =>
+          console.log("DEBUG: Owned Items Response:", JSON.stringify(ownedRes.data, null, 2));
+
+          // Filter items that belong to this character (API)
+          const apiItems = ownedRes.data.filter(item =>
             (item.personagem && item.personagem.id == charId) ||
             (item.personagemId == charId)
           );
-          setOwnedItems(myItems);
+          allItems = [...apiItems];
         } catch (e) {
-          console.log("Erro ao carregar itens comprados", e);
+          console.log("Erro ao carregar itens da API", e);
         }
+
+        // Fetch Local Items (Fallback/Hybrid)
+        try {
+          const storedLocal = await AsyncStorage.getItem(`owned_items_${charId}`);
+          if (storedLocal) {
+            const localIds = JSON.parse(storedLocal);
+            // Create dummy entry objects for local items if they aren't already in the list
+            localIds.forEach(id => {
+              const alreadyExists = allItems.some(item => {
+                const pId = item.premioId || (item.premio && item.premio.id);
+                return pId == id;
+              });
+
+              if (!alreadyExists) {
+                // Add structure compatible with the map function
+                allItems.push({ premioId: id, premio: { id: id } });
+              }
+            });
+          }
+        } catch (localE) {
+          console.log("Erro ao carregar itens locais", localE);
+        }
+
+        console.log("DEBUG: Final Merged Items List:", allItems);
+        setOwnedItems(allItems);
       } else {
         Alert.alert("Erro", "Personagem não encontrado.");
         router.back();
@@ -101,8 +128,13 @@ export default function ConfigPersonagemScreen() {
   };
 
   const handleEquip = (premioId) => {
+    console.log("DEBUG: Attempting to equip item:", premioId);
     const itemVisual = ITEMS_DB[premioId];
-    if (!itemVisual) return;
+    if (!itemVisual) {
+      console.log("DEBUG: Item visual not found in DB for ID:", premioId);
+      Alert.alert("Erro", "Item não reconhecido no sistema visual.");
+      return;
+    }
 
     setCharacter(prev => {
       let updates = {};
@@ -110,8 +142,7 @@ export default function ConfigPersonagemScreen() {
       if (itemVisual.type === ITEM_TYPE.CABECA) updates.cabecaId = premioId;
       if (itemVisual.type === ITEM_TYPE.MAO) updates.maoId = premioId;
 
-      // Se clicar no item já equipado, pode desequipar? Opcional.
-      // Por enquanto, apenas troca.
+      console.log("DEBUG: Updating character with:", updates);
       return { ...prev, ...updates };
     });
   };
